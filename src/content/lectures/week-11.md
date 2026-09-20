@@ -17,39 +17,52 @@ related:
   - lectures/week-12
   - lectures/week-04
 links:
+  - label: "An X server compiled to WebAssembly"
+    url: https://github.com/roozbehid/XServer
   - label: "Greenfield — a Wayland compositor for the web"
     url: https://github.com/udevbe/greenfield
-  - label: "WebVM 2.0 — unmodified Xorg via KMS"
+  - label: "WebVM 2.0 — unmodified Xorg via kernel mode-setting"
     url: https://labs.leaningtech.com/blog/webvm-20
 ---
 
-Nothing in this course determines your options as sharply as this. The
-rendering path is not something you choose in week 11; it was decided by the
-approach you committed to, and this is the week you find out what it gave you.
+Nothing else in this course constrains you as sharply as this. The rendering
+path was not chosen in week 11 — it was decided by the approach you committed
+to, and this is the week you find out what that left you.
 
-- **You compiled the app.** You get WebGL or WebGPU, and you rewrite your
-  graphics code. One context per surface, no sharing, and a subset of GL ES
-  unless you bring an emulation layer.
-- **You emulated a machine.** You get a framebuffer blitted to a canvas.
-  Unaccelerated, entirely general, and the reason a twenty-five-year-old
-  operating system works perfectly.
-- **You ran a kernel.** You can implement the graphics device and the kernel
-  mode-setting interface, and run an unmodified X server — in two dimensions.
-  Wayland stays out of reach while EGL is unimplemented.
-- **You kept the app native.** You keep the whole application on a real machine
-  and ship pixels. A Wayland compositor written in TypeScript renders each
-  surface as a WebGL texture; the remote path takes zero-copy buffers into an
-  H.264 pipeline and decodes in the browser.
+**You compiled the application.** You get the browser's own graphics APIs, and
+you rewrite whatever your program used to call. One drawing context per
+surface, no sharing between them, and a subset of the API you knew. But the
+scope is wider than it first looks: you are not limited to compiling the
+application. Somebody has compiled an entire X server to WebAssembly, which
+means "port the app" and "port the thing the app talks to" are both on the
+table.
 
-That last one has a detail worth the whole week: H.264 has no alpha channel, so
-every frame ships as **two** video streams, one opaque and one alpha, composited
-in the page. This is what it looks like when a constraint three layers down
-reaches up and changes your architecture.
+**You compiled against a POSIX surface.** Your program still believes it is
+opening a socket and speaking a display protocol. A compositor running in the
+page can be the other end of that conversation — a Wayland compositor written
+in TypeScript will accept clients over a message channel — though the client
+has to be rebuilt to reach it, so this is cheaper than it sounds only if you
+were rebuilding anyway.
+
+**You emulated a machine.** You get a framebuffer, blitted to a canvas.
+Unaccelerated, completely general, and the reason a twenty-five-year-old
+desktop works perfectly.
+
+**You ran a kernel.** You can implement the graphics device and the kernel's
+mode-setting interface and run an unmodified X server — in two dimensions.
+Wayland stays out of reach while the EGL layer is unimplemented.
+
+One detail from outside the course's premise, because it is too good to leave
+out. If you are permitted *not* to run the program in the browser, you keep it
+on a real machine and ship pixels. The remote path of that Wayland compositor
+encodes surfaces as H.264 — and H.264 has no alpha channel, so every frame is
+sent as **two** video streams, opaque and alpha, recomposited in the page. A
+constraint three layers down reached up and changed the architecture.
 
 ## Outline
 
 - four approaches, four rendering stories
-- GL ES, WebGPU, and what a port actually rewrites
-- framebuffers, KMS, and unmodified X
-- Wayland over a socket that is not a socket
-- remote pixels: codecs, latency, and the missing alpha channel
+- what a graphics port actually rewrites
+- compiling the display server rather than the client
+- framebuffers, mode-setting, and unmodified X
+- remote pixels, codecs, and the missing alpha channel

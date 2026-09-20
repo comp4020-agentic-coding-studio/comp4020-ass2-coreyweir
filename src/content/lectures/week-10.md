@@ -17,44 +17,45 @@ related:
   - lectures/week-11
   - lectures/week-06
 links:
-  - label: "v86 — how the x86-to-wasm JIT works"
+  - label: "v86 — how the x86-to-WebAssembly JIT works"
     url: https://github.com/copy/v86/blob/master/docs/how-it-works.md
+  - label: "TinyEMU — Bellard's RISC-V and x86 emulators"
+    url: https://bellard.org/tinyemu/
   - label: "linux-wasm — a WebAssembly architecture port of Linux"
     url: https://github.com/joelseverin/linux-wasm
 ---
 
-Everything in weeks 5 to 8 was an attempt to provide kernel services without a
-kernel. This week concedes the point, and immediately splits in two.
+Weeks 5 to 8 were all attempts to provide kernel services without a kernel.
+This week concedes the point, and immediately splits in two.
 
-**Emulate a machine** and the kernel is unmodified. v86 does this: an x86 PC
-with an 8259 interrupt controller, an 8254 timer, VGA, IDE, NE2000, and a
-just-in-time translator that measures hotness per page and compiles pages into
-WebAssembly functions. Paging is emulated through a four-megabyte software TLB,
-so every guest memory access is a lookup followed by a bounds-checked
-WebAssembly access. It boots Windows 98 and it has no multicore, because
-nothing in the design was going to give it one for free.
+**Emulate a machine** and the kernel is unmodified, because it does not know
+anything has changed. This is the older and more general answer: an interrupt
+controller, a timer, a disk, a network card and a display, all in software. It
+boots operating systems from the nineties without their cooperation, and it is
+where the browser's oldest party trick comes from.
 
-**Port the kernel** and there is no machine at all. linux-wasm adds WebAssembly
-as a Linux architecture — a patched linker, a kernel built **NOMMU** because
-WebAssembly has no memory management unit, and a userspace that must therefore
-be position-independent. That is a different project with different unfinished
-edges, and it is the cleanest illustration that "run a kernel" and "emulate a
-machine" are not the same sentence.
+**Port the kernel** and there is no machine at all. One project adds
+WebAssembly as a Linux architecture — which means no memory management unit,
+because WebAssembly has none, so the kernel is built without one and every
+userspace program must be position-independent. That is a different project
+with different unfinished edges, and it is the clearest demonstration that
+"run a kernel" and "emulate a machine" are not the same sentence.
 
-Either way you get what the previous five weeks could not: real processes, real
-`fork`, a real filesystem, a real TCP stack. One project boots Linux 6.18 from
-a snapshot in about a third of a second and runs `node --version` in under two.
+Either way you get what the previous five weeks could not: real processes, a
+real fork, a real filesystem, a real network stack. One RISC-V system boots
+Linux from a snapshot in about a third of a second.
 
-And either way you pay, because this is not virtualisation. Hardware
-virtualisation runs guest instructions natively and lets the CPU's own page
-walker do translation; only privileged operations trap. An emulator in a tab
-cannot install a page table, so the hardware does none of that work for it.
+And either way you pay for it, because this is not virtualisation. A hypervisor
+runs guest instructions on the real processor and lets the hardware's own page
+tables do address translation; only privileged operations trap out. An emulator
+in a browser tab cannot install a page table, so it does that work itself, for
+every memory access, in software.
 
 ## Outline
 
 - emulate a machine, or port a kernel
-- v86: JIT, software TLB, and no second core
-- linux-wasm: NOMMU, and what that costs userspace
+- interrupts, timers and devices, in software
+- no memory management unit, and what that costs userspace
 - snapshot boot, and what it buys
-- why this is nowhere near KVM, mechanically
+- why this is nowhere near a hypervisor, mechanically
 - the side effect: a kernel makes graphics tractable

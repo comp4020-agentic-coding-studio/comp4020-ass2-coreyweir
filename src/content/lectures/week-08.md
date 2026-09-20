@@ -20,6 +20,8 @@ links:
     url: https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_request_header
   - label: "Direct Sockets API (not available to the web)"
     url: https://wicg.github.io/direct-sockets/
+  - label: "A WireGuard client compiled to WebAssembly"
+    url: https://pkg.go.dev/tailscale.com/cmd/tsconnect/wasm
 ---
 
 A page gets `fetch`, WebSocket, WebRTC and WebTransport. Every one of those
@@ -47,6 +49,14 @@ construction**. One endpoint returning `Access-Control-Allow-Origin` gives you
 a clean round trip; another, one line of configuration away, gives you a 502
 before your code sees anything. A proxy fixes this only by becoming the origin,
 which is how you accidentally ship an open egress service.
+
+There are two honourable ways out, and both change what you are building. You
+can **relay**: tunnel the connection over a WebSocket to something holding a
+real socket, which is how the x86 emulator from week 1 does its networking. Or
+you can **stop being a web page**: a WireGuard client compiled to WebAssembly
+gives the guest a genuine network, and the origin's opinion stops mattering
+because you are no longer making web requests. Each buys reachability by
+adding infrastructure somebody has to run.
 
 ## Outline
 

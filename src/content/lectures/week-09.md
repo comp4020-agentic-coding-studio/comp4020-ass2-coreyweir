@@ -1,8 +1,8 @@
 ---
 title: Running "native" binaries
 description:
-  Take the source requirement away entirely. Most of the ways to do that are
-  not emulation, and the difference between them is the week
+  Take the source requirement away entirely — and find that most of the ways to
+  do it are not emulation at all
 week: 9
 date: 2027-04-26
 teachers:
@@ -16,42 +16,54 @@ related:
   - lectures/week-10
   - lectures/week-04
 links:
-  - label: "elfconv — AOT translation of Linux ELF to WebAssembly"
+  - label: "elfconv — ahead-of-time translation of Linux ELF to WebAssembly"
     url: https://github.com/yomaytk/elfconv
-  - label: "Biotite: lifting RV64GC to LLVM IR (CC 2025)"
+  - label: "MyAOT — its predecessor, riscv32 ELF to WebAssembly"
+    url: https://github.com/AkihiroSuda/myaot
+  - label: "Biotite: lifting RV64GC to LLVM IR (Compiler Construction 2025)"
     url: https://dl.acm.org/doi/10.1145/3708493.3712693
 ---
 
-Every option so far needed the source, or at least a rebuild. This one does
-not, and that is worth a great deal when the thing you want to run is somebody
+Every option so far wanted the source, or at least a rebuild. This one does
+not, which matters a great deal when the thing you want to run is somebody
 else's release artefact.
 
-The word "emulation" covers four different techniques and only one of them is
-emulation. **Interpretation** decodes and dispatches each instruction, and it
-is the slow, simple, reliable one. **Just-in-time translation** compiles hot
-code at runtime after measuring it. **Ahead-of-time static binary translation**
-converts the whole binary before it runs — which means solving code-versus-data
-and indirect jumps statically, which is exactly why there is an academic
-literature here rather than a weekend project. And translating at
-snapshot-build time from a recorded trace is a fourth thing again.
+Four techniques hide under one word, and only the first is emulation.
 
-That literature is the answer to the obvious objection about this course. NTT's
-elfconv lifts Linux ELF through LLVM IR to WebAssembly at between 78 and 96 per
-cent of natively-compiled wasm, against roughly ten times worse for emulation.
-It is also AArch64-only and statically-linked-only, and no completed general
-RISC-V-to-WebAssembly static translator appears to exist. The discipline is
-real, thin, and has room in it.
+**Interpretation** decodes and dispatches one instruction at a time. It is
+slow, simple and almost always correct, and it will run an unmodified binary
+for an architecture your machine has never had.
 
-The limit is elegant. One project traced 165,264 hot blocks into a 158 MB
-generated source file and a 60 MB wasm module, and brought a cold start from
-fifteen minutes to eighteen seconds. It still could not cover the guest's
-own JIT, because V8 emits machine code at runtime at addresses no static
-translator can predict. **Ahead-of-time translation is defeated by guests that
-generate their own code.**
+**Just-in-time translation** measures which code is hot and compiles that, at
+runtime, into WebAssembly it then calls.
+
+**Static binary translation** converts the whole binary before it runs. This is
+the hard one, because a translator must decide statically what is code, what is
+data, and where an indirect jump can land — which is why the serious work here
+is compiler research rather than tooling.
+
+**Trace-driven translation** is a fourth thing: record which blocks a real
+workload actually executes, then translate those ahead of time and interpret
+the rest.
+
+What the field has achieved is narrower than you would guess and better than
+you would fear. The strongest published result translates Linux binaries to
+WebAssembly at 78–96% of natively-compiled WebAssembly, against roughly ten
+times worse for emulation — but only for one architecture, and only for
+statically linked programs. Beyond that, RISC-V-to-WebAssembly translators
+exist largely as student projects. That is not a gap in the literature so much
+as a verdict from it: the technique is understood, and it rarely repays the
+effort.
+
+The limit is the elegant part. One project traced 165,264 hot blocks from a
+real workload, translated them ahead of time, and brought a cold start from
+fifteen minutes to eighteen seconds. It still could not cover the guest's own
+just-in-time compiler, because a runtime that writes its own machine code
+writes it at addresses no static translator can predict.
 
 ## Outline
 
-- interpretation, JIT, static translation, and trace-driven AOT
-- an unmodified Node binary, interpreted
-- what the literature has actually achieved
-- the JIT-versus-AOT limit, with numbers
+- interpret, JIT, translate statically, translate from a trace
+- running a binary for an architecture you do not have
+- what the research has actually delivered, and for what
+- why a guest that compiles its own code defeats ahead-of-time translation

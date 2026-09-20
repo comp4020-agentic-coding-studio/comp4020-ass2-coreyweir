@@ -15,31 +15,33 @@ related:
   - lectures/week-04
 ---
 
-Three distinct things get called the same thing, and the distinction decides
+Three words get used interchangeably, and the difference between them decides
 what the work costs.
 
-A **polyfill** fills a gap in a surface that already exists and is otherwise
-fine. A **shim** stands in front of a surface and translates. A
-**reimplementation** rebuilds the thing. Only the third has unbounded cost, and
-it is the one people wander into by accident.
+A **polyfill** implements a standard the environment is missing, so callers use
+the ordinary API and never learn it was absent. A **shim** is the broader move:
+sit in front of a surface and translate, which includes adapting to an API that
+is not the one the caller asked for. Polyfills are a kind of shim — the kind
+where the seams are invisible. A **reimplementation** rebuilds the
+functionality itself, and it is the only one of the three whose cost has no
+ceiling.
 
-Reimplementation also scales worse than anyone expects. `date` is an afternoon,
-until it has to be POSIX-compatible, at which point it is a week of edge cases.
-`find` is comfortable over any filesystem you like — until `-exec`, which needs
-a process. A game ported to the browser meets WebGL, which is not OpenGL, and
-somebody is now reimplementing a graphics API.
+Reimplementation also scales worse than people expect. A date formatter is an
+afternoon, until it has to match a specification, at which point it is a week
+of edge cases. A file-search tool is comfortable over any filesystem you like
+— until it has to run a command on each result, which needs something to run
+commands. A game ported to the browser meets a graphics API that resembles the
+one it was written against without matching it, and somebody is now
+reimplementing graphics.
 
-The important point for later weeks: reimplementation is not an alternative to
-the other options on the ladder. It is a **component** of all of them. Every
-approach in this course ends up reimplementing something; the question is how
-much, and whether you chose it.
-
-We also meet Nodepod here, because week 7 needs the picture of two runtimes
-sharing one world.
+The point that matters for the rest of the course: reimplementation is not an
+alternative to the other options. It is a **component** of all of them. Every
+approach here reimplements something. The question is how much, and whether
+you chose it or discovered it.
 
 ## Outline
 
-- polyfill, shim, reimplement — and why the words matter
-- what falls out easily, and what does not
-- Nodepod, and a real shell that is itself JavaScript
-- the wall: anything that exists only as a compiled binary
+- polyfill, shim, reimplement — and why the words are worth separating
+- what falls out cheaply, and what does not
+- emulating a runtime rather than a machine
+- the wall: things that exist only as compiled binaries

@@ -1,8 +1,8 @@
 ---
 title: What does it talk to?
 description:
-  Find out whether your program's network requirements survive a browser, using
-  the only test that settles it
+  Inventory your program's network requirements, then find out which of them a
+  browser can actually satisfy and what the rest would cost
 week: 8
 date: 2027-04-19
 teachers:
@@ -11,34 +11,40 @@ tags:
   - network
 spec:
   - you can read a request and response in full, headers included
-  - you bring a list of every host your program contacts
+  - you bring a list of every host, port and protocol your program contacts
 related:
   - lectures/week-08
 ---
 
-Inventory first, then verdict.
+Inventory first, then sort by what can actually be tested.
 
-**What does it talk to?** Every host, every port, every protocol. Does it
-listen? Does it need UDP? Does it hold a connection open, or is it
-request-response? Does it care about the exact bytes of its own request?
+**The inventory.** Every host, every port, every protocol. Does it listen? Does
+it need UDP? Does it hold a connection open, or is it request-response? Does it
+care about the exact bytes of its own request?
 
-**Then the only test that settles anything.** For each host, issue the request
-from a browser and see what comes back. A `fetch` from the console is enough to
-learn the answer, and the answer is usually immediate: either the origin sends
-`Access-Control-Allow-Origin` and you are fine, or it does not and you are not.
+**The HTTP endpoints you can test directly.** Issue the request from a browser
+and see what comes back. The answer is immediate and binary: either the origin
+sends the header that permits you to read the response, or it does not.
 
-Try a spread, because the variety is the lesson:
+Try a spread — an API that advertises support, a vendor API that does not, a
+package registry, and something of your own where you control the headers.
 
-- an API that advertises CORS support
-- one that does not — most vendor APIs
-- a package registry or distribution mirror
-- something of your own, where you control the headers
+**Everything else you cannot test that way**, and pretending otherwise is the
+mistake this session exists to prevent. A raw TCP service, a UDP protocol, or
+anything that listens will not answer a browser request at all. For those the
+question is not "does it work" but "what shape of answer is available":
 
-Record which succeeded, which failed, and what the failure looked like from
-JavaScript. Note in particular how little the error tells you.
+- **A relay.** Tunnel the connection over a WebSocket to something that holds
+  the real socket. This is not a hack of last resort — the x86 emulator you
+  used in week 1 does exactly this for its networking.
+- **A real network stack.** Bring a VPN into the page: a WireGuard client
+  compiled to WebAssembly gives the guest genuine reachability, and CORS stops
+  being the question because you are no longer making web requests.
+- **Change the protocol**, if you control both ends.
+- **Move the requirement**, if it turns out nobody needed UDP after all.
 
-The finding to bring back is a sentence of the form: *my target contacts N
-hosts; M of them are reachable from a page; here is what I would have to do
-about the rest.* Options are not limited to "give up" — you can proxy, vendor
-the data, change the protocol, or choose a different approach entirely. What
-you cannot do is make somebody else's server send a header.
+Each of those costs something — a server you now run, a network you now join,
+a protocol you now maintain. Price at least one of them.
+
+Bring back: how many of your program's endpoints are directly reachable, what
+you would do about the rest, and what that would cost somebody to operate.

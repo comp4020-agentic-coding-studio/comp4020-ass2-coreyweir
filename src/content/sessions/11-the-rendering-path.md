@@ -1,8 +1,8 @@
 ---
 title: The rendering path
 description:
-  Trace a pixel from your program to the screen, and find out what your
-  committed approach has left you
+  Trace a pixel from a program to the screen, and find out what a committed
+  approach leaves you able to draw with
 week: 11
 date: 2027-05-10
 teachers:
@@ -10,32 +10,35 @@ teachers:
 tags:
   - graphics
 spec:
-  - you have committed to an approach and can say which
-  - you know whether your target draws anything at all
+  - you can say which approach you committed to in Assignment 2
+  - you bring something that draws, even if it is not your target
 related:
   - lectures/week-11
 ---
 
-Some targets do not draw. If yours is one of them, this session is still the
-one where you find out what your approach *would* have cost you, because
-Assignment 3 may well hand you a requirement that draws.
+Plenty of targets never draw anything. If yours is one of them, borrow
+something that does — the week's content is the *path*, and you can only see it
+on a program that has one.
 
-**Trace the path.** From the call your program makes, to the thing that ends up
-on the screen. Name every layer and every translation. Then find the first
-layer where your chosen approach has no answer.
+Suggestions, chosen so the room ends up with different paths to compare:
 
-Suggested things to try, depending on where you landed:
+- an SDL or OpenGL demo compiled to WebAssembly
+- a terminal application, and then the question of what is drawing the terminal
+- an emulated machine running a desktop
+- an X client against an X server that was itself compiled to WebAssembly
+- a graphical program driven remotely, with the pixels arriving as video
 
-- an SDL or OpenGL demo compiled to WebAssembly — what did the GL layer become?
-- an emulated machine running a desktop — how does the framebuffer arrive?
-- a graphical program on a remote compositor — where does the latency live?
-- a program that only writes to a terminal — what is drawing the terminal?
+**Trace the path.** From the call the program makes to the thing on the screen,
+name every layer and every translation. Then find the first layer where your
+committed approach has no answer, or a worse one than you assumed.
 
-For whichever you pick, get two numbers: how long until the first frame, and
-how it feels to interact with. The second is not rigorous and is not optional.
-This is the one place in the course where the subjective measure is the one
-that decides whether the result is usable.
+**Get two numbers.** Time to first frame, and how it feels to interact with.
+The second is subjective and is not optional — this is the one place in the
+course where the subjective measure decides whether the result is usable at
+all.
 
-Bring back: the path, the first layer that failed or would fail, and what it
-would cost to change approach now in order to fix it. That last figure is what
-Assignment 3 is about, and it is cheaper to discover this week than next.
+Bring back the path, the first layer that fails, and an estimate: if graphics
+became a requirement for your target tomorrow, what would your committed
+approach cost you? You choose your own new requirement in Assignment 3 and this
+may well not be it — but the estimate is the same shape either way, and this is
+the cheapest week to practise making one.

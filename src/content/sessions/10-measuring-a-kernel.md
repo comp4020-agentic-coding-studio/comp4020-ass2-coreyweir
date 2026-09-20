@@ -27,8 +27,10 @@ Measure, rather than read:
 - **Throughput.** Something CPU-bound, against the same work on your host. Get
   a ratio.
 - **Latency.** Typing. It is subjective and it matters more than the ratio.
-- **The thing that breaks.** Try to use it as you would a real machine for five
-  minutes, and record the first moment you stop believing it.
+- **The thing that breaks.** Use it as you would a real machine for five
+  minutes and find the first thing that is not there. Copy and paste between
+  the page and the guest. Resize the window. Play a sound. Open a second core's
+  worth of work. Unplug the network. Reload the tab and see what survived.
 
 Then the estimate. For your target: what would this approach cost in download,
 in start-up, in throughput — and, honestly, what would it *fix*? A kernel

@@ -43,5 +43,10 @@ Suggested behaviours, if you want a different one:
 - two writers appending to one file
 - `stat` after a write, from a different runtime
 
-Bring the smallest input size at which the two hosts disagree. That number is
-the finding, because it tells you how long the bug would have hidden.
+Every one of those has a scale you can turn up: entries in the directory, bytes
+in the file, concurrent writers, calls before you check. Turn it up until the
+two hosts disagree, then turn it back down until they agree again.
+
+**That threshold is the finding.** Not the bug — the number of entries, or
+kilobytes, or writers below which everything looks correct. It tells you how
+large a test would have had to be to catch this, and therefore why nobody did.
