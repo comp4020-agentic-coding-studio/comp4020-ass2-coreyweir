@@ -1,0 +1,160 @@
+---
+title: Shims, polyfills and reimplementation
+description:
+  Week 3 — implement the interface instead of the machine, and the three
+  different things people mean when they say so
+---
+
+{/* _class: impact */}
+
+# Shims, polyfills and reimplementation
+
+Week 3
+
+---
+
+{/* _id: words */}
+
+## Three words, used interchangeably, costing different amounts
+
+**Polyfill** — implement a standard the environment is missing, so callers use
+the ordinary API and never learn it was absent.
+
+**Shim** — sit in front of a surface and translate. Broader: it includes
+adapting to an API that is not the one the caller asked for.
+
+**Reimplementation** — rebuild the functionality itself.
+
+A polyfill is a shim whose seams are invisible. Reimplementation is the only
+one of the three whose cost has no ceiling.
+
+---
+
+## Why separating them is not pedantry
+
+| Move             | You are promising                        | Bounded by                    |
+| ---------------- | ---------------------------------------- | ----------------------------- |
+| polyfill         | the spec, exactly                        | the spec — someone wrote it down |
+| shim             | enough of the surface for **this** caller | the caller's actual usage     |
+| reimplementation | the behaviour                            | nothing                       |
+
+The first two have an authority you can check against. The third has a moving
+target, which is the same reason it is sometimes the only option.
+
+---
+
+{/* _id: cheap */}
+
+## What falls out cheaply
+
+Anything that is a pure function of its arguments, and anything the platform
+already does under a different name.
+
+A missing array method. A path-manipulation library. A hash. An event emitter.
+Byte-level encoding. These are afternoons, and they stay afternoons.
+
+The tell is that you can write the test before you write the code, from a
+document, without running the original.
+
+---
+
+## And what does not
+
+- **A date formatter** is an afternoon — until it has to match a
+  specification, at which point it is a week of edge cases you did not know
+  existed.
+- **A file-search tool** is comfortable over any filesystem you like — until
+  it has to run a command on each result, and now you need something that runs
+  commands.
+- **A game** meets a graphics API that resembles the one it was written
+  against without matching it, and somebody is now reimplementing graphics.
+
+---
+
+{/* _class: impact */}
+
+# Each of those is the same failure: the boundary was not where it looked.
+
+---
+
+## Emulating a runtime rather than a machine
+
+One step up from shimming calls: provide the whole ambient environment a
+program's ecosystem expects — module resolution, a standard library, a process
+object, an event loop.
+
+This works remarkably well, and it works for exactly one class of target: the
+ones written **against** that runtime.
+
+It buys you every program in that ecosystem and not one program outside it.
+
+---
+
+## The obvious limit, stated once
+
+Reimplementing a runtime's API surface gets you programs written for that
+runtime. It does not get you a program written in another language that merely
+ships as a binary.
+
+That is not a criticism of the approach. It is the approach's boundary, and
+knowing exactly where it sits is the useful part.
+
+---
+
+{/* _id: wall */}
+
+## The wall
+
+Sooner or later the thing you need exists only as a compiled binary.
+
+No source you are allowed to build. No interface you can reimplement, because
+what you have is not an interface — it is machine code that expects a
+particular operating system to be underneath it.
+
+Every remaining week of this course is a different answer to that sentence.
+
+---
+
+{/* _id: component */}
+
+## The point that carries to the rest of the course
+
+Reimplementation is **not an alternative** to the other options.
+
+It is a **component** of all of them. Compile it and you reimplement its
+system calls. Give it a kernel surface and somebody reimplemented the kernel.
+Emulate the machine and you reimplemented an interrupt controller, a timer, a
+disk and a display.
+
+---
+
+{/* _class: impact */}
+
+# Every approach reimplements something. The question is how much, and whether you chose it.
+
+---
+
+## How to tell which you are doing
+
+Before you write the adapter, answer two questions in writing:
+
+1. **What is the authority?** A specification, the original's source, or its
+   observable behaviour. If it is the third, you have signed up for an
+   open-ended job.
+2. **Who else calls this?** A shim that serves one caller is finished when that
+   caller works. A shim that serves an ecosystem is never finished.
+
+Most cost overruns in this space are a shim that was quietly promoted to a
+reimplementation by its second caller.
+
+---
+
+## Before the session
+
+Take something small your target depends on and shim it — far enough that the
+program gets further than it did, and no further.
+
+Then find the first call that the shim answers **plausibly but wrongly**.
+
+Not the one that throws. The one that returns something. That distance — from
+"it throws" to "it lies" — is the thing this week is about.

@@ -10,6 +10,7 @@ teachers:
 tags:
   - polyfills
   - reimplementation
+slides: /decks/week-03/
 related:
   - sessions/03-the-shim-that-almost-works
   - lectures/week-04
