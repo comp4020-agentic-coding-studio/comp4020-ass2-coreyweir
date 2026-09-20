@@ -159,11 +159,15 @@ resuming, carefully, or you have shipped every user the same random seed.
 
 ---
 
-## The one line worth remembering
+{/* _class: impact */}
 
-**A page in a browser cannot install a page table.**
+# A page in a browser cannot install a page table.
 
-So every single guest memory access is a software lookup followed by a
+---
+
+## Which is the whole cost, in one sentence
+
+Every single guest memory access is a software lookup followed by a
 bounds-checked WebAssembly access. Not the slow paths. All of them.
 
 And with no `mprotect`, self-modifying code cannot be caught by a fault — it
