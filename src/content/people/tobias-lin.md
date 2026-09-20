@@ -5,6 +5,7 @@ description:
   just invented
 role: Tutor and PhD candidate
 email: tobias.lin@slop.university
+contact: In the sessions, and in the lab most other times
 ---
 
 Tobias is writing a thesis on ahead-of-time translation of machine code to

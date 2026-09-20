@@ -4,6 +4,7 @@ description:
   Assistant lecturer. Will ask what your clever idea costs to keep running
 role: Assistant lecturer
 email: nadia.osei@slop.university
+contact: By email, or in the ten minutes after any session
 ---
 
 Nadia teaches alongside Corey and oversees the sessions.

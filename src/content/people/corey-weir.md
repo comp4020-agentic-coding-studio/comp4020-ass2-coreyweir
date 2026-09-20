@@ -5,6 +5,7 @@ description:
   software run where it was not invited
 role: Convenor and lecturer
 email: corey.weir@slop.university
+contact: Office hours Wednesdays 14:00–16:00, or catch them in a session
 ---
 
 Corey convenes SLOP8815 because nobody stopped them.
