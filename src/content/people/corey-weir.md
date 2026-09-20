@@ -17,7 +17,7 @@ syscall surface than is strictly healthy, maintain patches to a shell they did
 not write, and once spent six weeks establishing that something was possible
 after being told it wasn't.
 
-They are a patient supervisor of other people's rabbit holes. If you come to
-one of the sessions they actually turn up to, certain your target cannot work,
-they will ask what you measured. Then they will ask again, more precisely.
-Eventually one of you will be right.
+They are a patient supervisor of other people's rabbit holes. If you come to a
+session they're at, certain your target cannot work, they will ask what you
+measured. Then they will ask again, more precisely. Eventually one of you will
+be right.
