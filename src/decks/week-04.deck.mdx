@@ -1,0 +1,168 @@
+---
+title: Compiling for the web
+description:
+  Week 4 — compilation is solved, interfaces are not, and two published
+  failure catalogues say exactly which ones
+---
+
+{/* _class: impact */}
+
+# Compiling for the web
+
+Week 4
+
+---
+
+{/* _id: two-questions */}
+
+## Two questions frame the week
+
+Find me a realistic codebase with no standard library dependency that will
+**not** compile to WebAssembly.
+
+Then find me a realistic codebase with no rendering, terminal, pipe, network or
+filesystem requirement.
+
+---
+
+## The first set is empty. The second is nearly empty.
+
+Which tells you the toolchain was never the problem.
+
+Compilation is solved. It has been solved for over a decade, and every
+remaining week of this course is about something else.
+
+**Interfaces are not solved**, and they are what a port actually dies of.
+
+---
+
+{/* _id: emscripten */}
+
+## Emscripten is an operating-system shim wearing a compiler's clothes
+
+| The program wants | It is handed                                |
+| ----------------- | ------------------------------------------- |
+| a filesystem      | MEMFS, IDBFS, NODEFS, or WASMFS             |
+| OpenGL ES         | WebGL — a subset, unless you pay for more   |
+| pthreads          | Web Workers, which needs cross-origin isolation |
+| to block          | Asyncify, or JSPI                           |
+
+Every row is a translation with a cost and a caveat. None of them is the
+compiler.
+
+---
+
+## Read the flags as a price list
+
+`-sFULL_ES2` and `-sLEGACY_GL_EMULATION` exist because the GL subset is not
+enough for real programs, and each one you switch on is code size and a slower
+path.
+
+Threads need `SharedArrayBuffer`, which needs the page to isolate itself from
+other origins — a deployment decision, not a build flag, and one that breaks
+things three layers away.
+
+The compiler will not tell you which of these you needed. The program will.
+
+---
+
+{/* _id: qt */}
+
+## Qt publishes an honest catalogue
+
+It reads as a list of interfaces, not a list of bugs:
+
+- every server class is unsupported — **nothing can listen**
+- the TLS and DNS classes do not function, because the browser owns both
+- one graphics context per surface, no sharing, so the widget that wraps a
+  drawing context is unavailable
+- three embedded fonts, and a default heap of 50 MB
+
+---
+
+## And one entry that is not like the others
+
+> the call that runs the application never returns
+
+So destructors never run. And a dialog that waits for an answer — the ordinary
+modal, implemented as a nested event loop — does not work, because **waiting is
+the thing you cannot do**.
+
+That is not a missing feature. It is the control-flow shape from week 2,
+arriving first, exactly as advertised.
+
+---
+
+{/* _id: libreoffice */}
+
+## LibreOffice: the same lesson at scale
+
+The WebAssembly build is **Writer only**. It wants one specific Qt and one
+specific Emscripten, and linking it may need **64 GB of memory**.
+
+Those are the things people quote. They are the least interesting facts about
+it.
+
+---
+
+## The blocker is architectural
+
+Dialogs are implemented by running a second event loop inside the first. The
+browser has exactly one.
+
+The maintainers' own description of the fix is "basically dropping
+`Application::Execute`" — removing the mechanism the entire application is
+built on.
+
+Which is why the more successful target is the **headless core**: the part
+with no event loop, no dialogs and no windows. Not a smaller port. A different
+one.
+
+---
+
+{/* _class: impact */}
+
+# The port that succeeded was the one that gave up the interface, not the one that shimmed it.
+
+---
+
+{/* _id: ordering */}
+
+## The order interfaces break in
+
+1. **blocking and re-entrant control flow** — weeks 5, 6
+2. **threads** — week 6
+3. **processes** — weeks 5, 6
+4. **network** — week 8
+5. **filesystem** — week 7
+6. **graphics** — week 11
+7. **dynamic linking** — weeks 9, 10
+
+That ordering is a claim about frequency, not difficulty. It is where a real
+port stops, in the order it stops there.
+
+---
+
+## Why that order, and not the other one
+
+Because the list is sorted by **how early the program needs it**.
+
+A program blocks in its first second. It opens a file soon after. It draws only
+once everything else has worked. So the interface that kills your port is
+rarely the hardest one — it is the earliest one, and you meet it before you
+have any momentum.
+
+Most ports die in the first ten minutes of the first run.
+
+---
+
+## Before the session
+
+Compile your target, or the nearest thing to it you can build, and **write down
+which interface stopped you first**.
+
+Not which one you expect to be hardest. Which one actually stopped you.
+
+The room's answers will not agree, and the disagreement is the finding: the
+same technique, applied to different programs, fails in a different place every
+time.

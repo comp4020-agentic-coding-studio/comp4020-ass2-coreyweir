@@ -13,6 +13,7 @@ tags:
   - filesystem
   - network
   - graphics
+slides: /decks/week-04/
 related:
   - sessions/04-which-interface-stops-you
   - lectures/week-11
