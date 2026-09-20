@@ -21,29 +21,68 @@ import { sessionLabels, siteConfig } from "../site-config";
     {courseMeta.tags.map((tag) => <li>{tag}</li>)}
   </ul>
 
-  <!-- STARTER_CONTENT: replace the authored page below, then remove this comment. -->
+  <p>
+    Everything can be made to run in a browser. That is not the interesting
+    part. The interesting part is that there are perhaps eight ways to do it,
+    they differ from one another by orders of magnitude, and you have to choose
+    between them before you have the evidence you would need to choose well.
+  </p>
+
   <h2>What you will do</h2>
   <p>
-    Say what a student spends their time on — the making, reading, arguing or
-    measuring that fills the weeks. Name the artefact they walk out with.
+    In week 2 you choose a program with no business running in a browser, and
+    you keep it until week 12. Every week after that introduces another way it
+    might be made to work — reimplementing its interfaces, compiling it,
+    handing it a kernel-shaped surface, translating its instructions, or
+    booting an operating system underneath it — and you work out what that way
+    would cost you specifically.
+  </p>
+  <p>
+    Proofs of concept are cheap now, so building them is the small half of the
+    work. The large half is designing comparisons that settle something,
+    committing on evidence you gathered yourself, and then — in the final
+    assignment — giving yourself a new requirement and finding out what your
+    commitment cost you.
+  </p>
+  <p>
+    Sessions are deliberately not your assignment. There you take one technique
+    and apply it to whatever program makes that technique interesting, which is
+    usually somebody else's.
   </p>
 
   <h2>Who it is for</h2>
   <p>
-    Say who this is aimed at and what they need to already know. Be specific
-    enough that someone can rule themselves in or out without emailing you.
+    Final-year students who can already program and are willing to be wrong in
+    public. You should be comfortable reading a stack trace that crosses a
+    language boundary, compiling something you did not write, and being told
+    that your measurement does not support your conclusion.
+  </p>
+  <p>
+    You do not need to have written WebAssembly, used a systems language, or
+    known what a syscall is. You will need all three by about week 5.
+  </p>
+
+  <h2>What you leave with</h2>
+  <p>
+    A defensible answer to a question this discipline asks constantly and
+    teaches almost nowhere: given several ways to build something, which one
+    should you actually pick, and how would you know before it is too late to
+    change your mind?
   </p>
 
   <h2>Where to go next</h2>
   <CardGrid columns={2}>
+    <Card title="Lectures" href="/lectures/">
+      <p>The twelve weeks, what each one covers, and what it ends on.</p>
+    </Card>
     <Card title={sessionLabels.plural} href="/sessions/">
-      <p>The weekly schedule and what happens in each teaching session.</p>
+      <p>What happens in the room each week, and what to bring.</p>
     </Card>
     <Card title="Assessment" href="/assessments/">
-      <p>What is marked, what it is worth, and when it is due.</p>
+      <p>Three assignments, what each is worth, and how they are marked.</p>
     </Card>
     <Card title="People" href="/people/">
-      <p>Who teaches the course and how to reach them.</p>
+      <p>Who teaches this and how to reach them.</p>
     </Card>
   </CardGrid>
 </ContentLayout>
