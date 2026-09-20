@@ -1,0 +1,200 @@
+---
+title: Graphics
+description:
+  Week 11 — four approaches lead to four rendering paths, none of them a
+  preference
+---
+
+{/* _class: impact */}
+
+# Graphics
+
+Week 11
+
+---
+
+{/* _id: constraint */}
+
+## Where an approach stops being a choice
+
+By the time a program needs to draw, the route you took to get it running has
+already decided what it is allowed to draw with.
+
+Every other week in this course has been about options. This one is about
+consequences, and the four routes lead to four quite different answers — none
+of which is a preference you get to express.
+
+---
+
+{/* _id: compiled */}
+
+## You compiled the application
+
+You get the browser's own graphics APIs, and you rewrite whatever your program
+used to call.
+
+The constraints arrive together: **one drawing context per surface**, no
+sharing between them, and a subset of the API you knew. That last one is why
+the widget every desktop toolkit provides for "put a drawing context in a
+window" is unavailable in the web build.
+
+The rewrite is the port. Not a step in it.
+
+---
+
+## But the scope is wider than it first looks
+
+You are not limited to compiling the *application*.
+
+Somebody has compiled an entire **X server** to WebAssembly.
+
+So "port the app" and "port the thing the app talks to" are both on the table,
+and the second one ports every client at once — which is a completely
+different cost curve, and the kind of move that only becomes visible when you
+stop treating the application as the unit.
+
+---
+
+{/* _id: posix */}
+
+## You compiled against a POSIX surface
+
+Your program still believes it is opening a socket and speaking a display
+protocol. So give it something to speak to.
+
+A **Wayland compositor written in TypeScript** will do exactly that: each
+client surface becomes a WebGL texture, one canvas is one Wayland output, and
+clients reach it over a message channel rather than a Unix socket.
+
+Which is elegant, and has one condition attached.
+
+---
+
+## The condition
+
+The client has to be **rebuilt** to reach it. There is no Unix socket, so
+there is no unmodified client.
+
+Which makes this cheaper than it sounds only if you were rebuilding anyway —
+and if you were rebuilding anyway, compare it honestly against just targeting
+the browser's graphics APIs directly.
+
+The interesting case is when you have many clients and one protocol. Then the
+compositor is written once.
+
+---
+
+{/* _id: emulated */}
+
+## You emulated a machine
+
+You get a **framebuffer**, blitted to a canvas.
+
+Unaccelerated. Completely general. Indifferent to what the guest thinks it is
+doing.
+
+It is why a twenty-five-year-old desktop works perfectly in a tab, and why a
+modern one does not: the guest is doing all its compositing in software on an
+emulated CPU, and then you copy the result.
+
+The oldest answer, and still the only one that needs no cooperation from the
+guest at all.
+
+---
+
+{/* _id: kernel */}
+
+## You ran a kernel
+
+Implement the graphics device and the kernel's mode-setting interface, and an
+**unmodified X server** will drive it. No patches, no rebuild, no shim — the
+driver interface is the contract, and you implemented the contract.
+
+In two dimensions.
+
+Wayland stays out of reach while the EGL layer is unimplemented, and that is
+not a small remaining task. It is the accelerated path.
+
+---
+
+## Four routes, four answers
+
+| You did this        | You draw with                    | Unmodified client? |
+| ------------------- | -------------------------------- | ------------------ |
+| compiled the app    | the browser's graphics APIs      | no — you rewrote it |
+| compiled the server | the same, once, for every client | yes                |
+| a POSIX surface     | a compositor in the page         | no — rebuild required |
+| emulated a machine  | a framebuffer                    | yes                |
+| ran a kernel        | mode-setting, 2D                 | yes                |
+
+The column that decides your semester is the third one.
+
+---
+
+{/* _class: impact */}
+
+# You do not choose the rendering path in week 11. You chose it in week 2.
+
+---
+
+{/* _id: remote */}
+
+## One detail from outside the premise
+
+If you are permitted *not* to run the program in the browser, the whole
+problem changes: keep it on a real machine, and ship pixels.
+
+That same Wayland compositor has a remote path. A real compositor on a Linux
+host, surfaces captured zero-copy from the graphics stack, encoded as
+**H.264**, sent over a WebSocket, decoded by the browser's own video decoder.
+
+Which is mature, well-understood technology, and then this happens.
+
+---
+
+{/* _class: impact */}
+
+# H.264 has no alpha channel.
+
+---
+
+## So every frame is sent twice
+
+Once for colour, once for opacity, as **two separate video streams**,
+recomposited in the page.
+
+A window with a rounded corner or a drop shadow is not decoration here — it is
+a second encoder, a second decoder, and twice the bandwidth.
+
+A constraint three layers down, in a codec chosen in 2003 for broadcast
+television, reached up and changed the architecture of a compositor written
+for the web.
+
+---
+
+## Which is the week's actual lesson
+
+Nobody chose that. It was not a trade-off anyone deliberated over; it fell out
+of a format decision made by people who were not thinking about window
+managers.
+
+The rendering path is full of these, and they are all discovered late, because
+drawing is the last thing a port gets to.
+
+That is why the honest time to cost graphics is **before you can draw
+anything** — when it is still a paragraph in a characterisation rather than a
+rewrite.
+
+---
+
+## Before the session
+
+Establish the rendering path your approach has already committed you to, and
+then find its first hard edge.
+
+Not "is it slow". Find something your target does — a second window, a shared
+context, a resize, transparency, a cursor — that the path you are on **cannot
+express**, and work out what it would take.
+
+Bring the thing that cannot be expressed. Those are more useful than
+benchmarks this week.

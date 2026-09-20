@@ -12,6 +12,7 @@ tags:
   - interfaces
   - network
   - performance
+slides: /decks/week-11/
 related:
   - sessions/11-the-rendering-path
   - lectures/week-12
