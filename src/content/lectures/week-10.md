@@ -12,6 +12,7 @@ tags:
   - network
   - performance
   - graphics
+slides: /decks/week-10/
 related:
   - sessions/10-measuring-a-kernel
   - lectures/week-11

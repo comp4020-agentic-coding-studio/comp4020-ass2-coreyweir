@@ -1,0 +1,202 @@
+---
+title: Running a full OS kernel
+description:
+  Week 10 — emulate a machine or port a kernel, and why neither is anything
+  like virtualisation
+---
+
+{/* _class: impact */}
+
+# Running a full OS kernel
+
+Week 10
+
+---
+
+{/* _id: concede */}
+
+## Weeks 5 to 8 were kernel services without a kernel
+
+Descriptors without a descriptor table. Processes made of workers. A network
+interface made of messages. A filesystem you wrote.
+
+Every one of them was an approximation of something an operating system
+already does correctly, and every one of them failed in a way that traced back
+to the approximation.
+
+This week concedes the point — and immediately splits in two.
+
+---
+
+{/* _id: split */}
+
+## Two sentences that sound identical
+
+**Emulate a machine.** The kernel is unmodified, because it does not know
+anything has changed. You are implementing hardware.
+
+**Port the kernel.** There is no machine at all. You are adding WebAssembly as
+a target architecture to an operating system.
+
+These are not variations on one approach. They share no code, fail for
+different reasons, and the second one is a compiler project.
+
+---
+
+{/* _id: devices */}
+
+## Emulating a machine means writing devices
+
+An interrupt controller. A programmable interval timer. A real-time clock. A
+disk controller. A network card. A display adapter with its vendor extensions.
+A sound card, because something will probe for one.
+
+All of it in software, all of it faithful enough that a driver written in 1998
+is satisfied.
+
+It boots operating systems from the nineties without their cooperation, and it
+is where the browser's oldest party trick comes from.
+
+---
+
+## How the fast ones are fast
+
+The mature x86 emulator interprets first, and measures **hotness per 4 KB
+page**. When a page is hot it compiles that page — plus the pages reachable
+from it — into a **single WebAssembly function**, with a jump table at the top
+to enter at the right offset.
+
+Guest control flow becomes structured WebAssembly control flow, which is a
+real problem with a real algorithm behind it, because WebAssembly has no
+`goto`.
+
+---
+
+## And what it cannot do
+
+**Multicore is explicitly missing.** So is 64-bit.
+
+Those are not roadmap items. A single-threaded emulator with a software
+address translator has nowhere to put a second core, and adding one means
+modelling memory ordering between guest cores on top of a host that already
+has its own.
+
+The oldest technique in the course is also the one with the hardest ceiling.
+
+---
+
+{/* _id: port */}
+
+## Porting the kernel instead
+
+Add WebAssembly as a Linux architecture. No devices, no emulated CPU — the
+kernel is compiled to the target and runs there.
+
+Which forces one enormous decision immediately: **WebAssembly has no memory
+management unit.**
+
+So the kernel is built without one, and every userspace program must be
+position-independent, because nothing will be relocating anything for it.
+
+---
+
+## What NOMMU costs you
+
+No `fork` in the sense you mean it. No copy-on-write. No demand paging. No
+`mprotect`. Address space layout is a shared problem rather than a private
+one.
+
+That is a different operating system with a different contract, and a great
+deal of existing software quietly assumes the contract it does not have.
+
+It is also the clearest demonstration available that "run a kernel" and
+"emulate a machine" are not the same sentence.
+
+---
+
+{/* _id: snapshot */}
+
+## What either one buys
+
+Real processes. A real `fork`. A real filesystem with real semantics. A real
+network stack, with a real routing table.
+
+Everything weeks 5 to 8 spent themselves approximating, done by the code that
+was written to do it.
+
+One RISC-V system boots Linux **from a snapshot in about a third of a
+second** — because the expensive part of booting is deterministic, so you do
+it once at build time and ship the resulting memory image.
+
+---
+
+## Snapshot boot is the good idea in this week
+
+Boot is a pure function of the kernel, the initramfs and the configuration.
+Run it once, freeze the machine state, and every subsequent start is a
+`memcpy`.
+
+It converts a start-up cost into a **download** cost, which you can compress,
+cache and version.
+
+The trade is that the snapshot is large, and that anything which must differ
+per session — clocks, entropy, identity — has to be re-derived after
+resuming, carefully, or you have shipped every user the same random seed.
+
+---
+
+{/* _id: hypervisor */}
+
+## And either way, you pay — because this is not virtualisation
+
+| A hypervisor                                  | An emulator in a tab                          |
+| --------------------------------------------- | --------------------------------------------- |
+| guest instructions run on the real CPU         | every instruction is dispatched by software    |
+| guest registers live in real registers         | guest registers live in linear memory          |
+| the hardware page walker does translation      | you do it, per access, in software             |
+| the real TLB caches it                         | you write your own TLB and hope it fits        |
+| only privileged operations trap out            | nothing is privileged, so nothing traps        |
+
+---
+
+## The one line worth remembering
+
+**A page in a browser cannot install a page table.**
+
+So every single guest memory access is a software lookup followed by a
+bounds-checked WebAssembly access. Not the slow paths. All of them.
+
+And with no `mprotect`, self-modifying code cannot be caught by a fault — it
+has to be caught by tracking dirty pages yourself, which is another check on
+every write.
+
+That is the whole cost, and it is structural. No amount of optimisation
+removes a layer that the hardware was doing for free.
+
+---
+
+{/* _id: graphics */}
+
+## The side effect
+
+Once there is a kernel, graphics becomes tractable in a way it was not in any
+previous week.
+
+Not because drawing got easier — because there is now something for a display
+driver to bind to. You can implement a graphics device and the kernel's
+mode-setting interface, and an unmodified display server will drive it.
+
+That is next week, and it is the clearest case in the course of an approach
+deciding something on your behalf.
+
+---
+
+## Before the session
+
+Boot something, and measure a kernel rather than a program.
+
+Time to a shell prompt. Time to a second process. What it costs to open a
+file. What `fork` costs, and whether it is real.
+
+Compare against the same numbers on your own machine. The ratio is the week's
+finding, and it will not be the same ratio for all four measurements.
