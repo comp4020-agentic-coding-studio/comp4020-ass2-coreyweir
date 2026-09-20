@@ -123,36 +123,33 @@ approach. It invalidates it.
 
 ## One that arrived late
 
-Ahead-of-time translating a RISC-V guest: trace the hot blocks at snapshot-build
-time, generate code for them, ship that.
+Week 9's translator: 165,264 hot blocks traced, a cold start brought from
+fifteen minutes to eighteen seconds. Real work, correctly done, and a result
+worth having.
 
-| Stage                    | Size      |
-| ------------------------ | --------- |
-| traced hot blocks        | 165,264   |
-| generated Rust           | 158 MB    |
-| resulting wasm           | 60.5 MB   |
-
-And still about 95 seconds to a usable TUI.
+It was defeated by one property of the target — that the guest compiles its own
+code at runtime — and that property was **visible in week 2**, in a single
+sentence about the runtime that nobody put a price on.
 
 ---
 
 {/* _class: impact */}
 
-# A guest that writes its own code defeats ahead-of-time translation.
+# The requirement that ends you is rarely the one you wrote down.
 
 ---
 
-## That is a requirement, not a bug
+## Nothing was implemented wrongly
 
-V8 emits machine code at runtime, at addresses nothing can predict. No amount
-of tracing covers it, because the code being traced does not exist until the
-guest decides to write it.
+That is what makes it a scope failure rather than an engineering one. There is
+no commit that introduced it and no test that would have caught it, because the
+code was correct.
 
-Nothing was implemented wrongly. A property of the target — one that was
-visible in week 2, in a sentence about JIT compilation nobody costed —
-invalidated the technique at the point it was most expensive to discover.
+A property of the target invalidated the technique, at the point in the
+calendar where discovering it was most expensive.
 
-The fallback was a real kernel underneath, which does this without being asked.
+The fallback was a real kernel underneath, which does this without being asked
+— and which was available, and costed, in week 2.
 
 ---
 
