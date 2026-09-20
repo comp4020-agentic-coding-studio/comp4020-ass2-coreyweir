@@ -1,0 +1,268 @@
+---
+title: The filesystem
+description:
+  Week 7 — what a guest expects of a filesystem, and the five correct designs
+  that had to be deleted anyway
+---
+
+{/* _class: impact */}
+
+# The filesystem
+
+Week 7
+
+---
+
+{/* _id: owed */}
+
+## What a guest means by "filesystem"
+
+Inodes. Directories. Descriptors with private offsets. Readdir cursors that
+survive between calls. `mmap`. Mode bits. Symlinks. Rename that is atomic.
+
+None of that is hard to provide. You can have a working one this afternoon.
+
+The difficulty is not in the first runtime. It is in the second.
+
+---
+
+{/* _id: backings */}
+
+## Four backings
+
+| Backing              | Buys you                             | Costs you                                 |
+| -------------------- | ------------------------------------ | ----------------------------------------- |
+| in-memory tree       | simple, fast, obviously correct      | nothing survives the tab                  |
+| IndexedDB            | durability, available everywhere     | async, so every call needs unwinding      |
+| OPFS                 | real file handles, real sync reads   | dedicated workers only, exclusive by default |
+| shared wasm memory   | one filesystem, seen by both runtimes | you are writing a filesystem              |
+
+The fourth is the only one where a JavaScript runtime and a WASIX runtime can
+read the same bytes without agreeing to synchronise.
+
+---
+
+## The OPFS clause people miss
+
+Synchronous access handles — the ones that make OPFS usable as a real
+filesystem at all — are **dedicated-worker only**, and take an **exclusive
+lock** on the file by default.
+
+So the moment you want the main thread to see a file the guest is holding, the
+API has already answered you. Not slowly. Not at all.
+
+---
+
+{/* _id: readdir */}
+
+## Nobody calls the syscall
+
+A program listing a directory almost never issues the system call itself. It
+asks its standard library, which:
+
+1. fetches a batch of entries into a fixed-size buffer
+2. hands them to the program one at a time
+3. asks for the next batch, from where it left off
+
+Between step 2 and step 3 the program can do anything. Deleting entries as you
+enumerate them is not exotic — it is what a recursive delete **is**.
+
+---
+
+## Where it left off
+
+A cookie is supposed to be an opaque token naming a *place in the directory*.
+
+One runtime rebuilt the listing from scratch on every call and treated the
+cookie as a **positional index** into the new list.
+
+Delete an entry and everything after it shifts up by one. The next call resumes
+one slot past where it should, and the entry that moved into that slot is never
+returned. Not skipped with an error. Never mentioned.
+
+---
+
+{/* _id: numbers */}
+
+## The same program, compiled twice
+
+One C source, one conformance test, two hosts:
+
+| Host                 | Checks | Failed |
+| -------------------- | ------ | ------ |
+| Linux                | 40     | **0**  |
+| wasmer CLI 7.3.0     | 40     | **10** |
+
+At the 128-byte batch Rust's `std::fs::ReadDir` requests — which is what
+`rm` from uutils is built on — deleting **1,000 files leaves 498 of them**.
+
+Exit status zero.
+
+---
+
+{/* _class: impact */}
+{/* _id: threshold */}
+
+# Below 130 entries, the bug does not exist.
+
+---
+
+## Which is why it survived
+
+Under about 130 entries the whole directory fits in one batch. There is never a
+second call, so there is never a stale cookie, so the delete is correct.
+
+Every test anybody wrote used a handful of files.
+
+This is the week's version of a problem you have met twice already: **your test
+host is more permissive than your target**. A green suite is evidence about the
+suite.
+
+---
+
+{/* _id: deleted */}
+{/* _animate: deleted */}
+
+## Five designs that worked, and were deleted
+
+**The indexed mirror.** A TypeScript index shadowing the guest's filesystem.
+`readdir` went from 18.7 ms to 2.2 µs — roughly 8,500×. Hydration went from 7 s
+to 0.30 s.
+
+Deleted.
+
+---
+
+{/* _animate: deleted */}
+
+## Five designs that worked, and were deleted
+
+**The snapshot overlay.** Correct. Reviewed. Shipped. It cost three to four
+boundary crossings per entry, doubled residency, and was rebuilt on every
+`exec`.
+
+**The barriers.** Thirty iterations of the concurrency suite, zero conflicts.
+
+Both deleted. Two more besides.
+
+---
+
+## All five failed the same way
+
+Every one of them produced **ghost entries** — a file the guest had deleted,
+still listed, or a file it had written, not there yet.
+
+The defect was never in any of the implementations. Each was a correct
+implementation of the wrong thing.
+
+The wrong thing was **having two copies**. A mirror that is 8,500× faster is
+still a second answer to a question that is only allowed one.
+
+---
+
+{/* _id: sharedfs */}
+
+## What survived: one filesystem, in shared memory
+
+A real on-disk-shaped filesystem, except the disk is a `SharedArrayBuffer`:
+
+- 4 KiB superblock, then the event ring, then the bitmaps
+- 128-byte inodes, 4 KiB blocks, 12 direct plus single and double indirect
+- ext2-shaped dirents, `NAME_MAX` 255
+- inode 0 and block 0 are never allocated, so zero means absent
+
+No mirror, no cache, no synchronisation step — because there is nothing to
+synchronise.
+
+---
+
+## The lock has to know which thread it is on
+
+One global write lock, hybrid. Readers are lock-free under per-inode seqlocks.
+
+The main thread takes it `SpinOnly`. A worker may take it `MayBlock`.
+
+That asymmetry is not a tuning choice — it is `Atomics.wait` being unavailable
+on the main thread. Every critical section is therefore pure memory operations,
+no JS calls, a few hundred nanoseconds long, because a spinning main thread is
+paying for every one of them.
+
+---
+
+{/* _id: ring */}
+
+## Telling anyone it changed
+
+The guest cannot call you. It writes to memory and carries on. So changes are
+announced in a ring buffer alongside the filesystem:
+
+- capacity is `region / 512`, clamped to 4 KiB–64 MiB — 1 MiB on a 512 MiB
+  filesystem
+- head is monotonic; the slot is `head % capacity`; a `Pad` record fills the
+  wrap
+- records carry an inode, or a `(parent, name)` — **never a path**, because a
+  path is a second copy of the tree
+
+Producers never block. They cannot: they hold the lock a spinning main thread
+is waiting on.
+
+---
+
+## What the ring actually did
+
+| Measurement                         | Result                          |
+| ----------------------------------- | ------------------------------- |
+| natural laps in normal operation    | 0                               |
+| largest observed burst              | 834–1,051 events, ~20–22 KB     |
+| headroom at that burst              | ~47×                            |
+| p99 drain                           | 0.07 ms                         |
+| recovery walk vs full rescan        | 14.9 ms vs 14.0 s (61,488 paths) |
+
+Forcing a lap at all took 22.1 seconds of deliberately blocked consumer.
+
+The recovery path exists anyway. A ring you cannot fall behind on is a ring you
+have not measured.
+
+---
+
+{/* _id: fidelity */}
+
+## The eight-writer hammer
+
+Eight threads, one filesystem, contending. It passed natively for an entire
+release.
+
+On `wasm32-wasip1-threads` it hung at 7% CPU.
+
+The native build's `park` was a **modelled** futex — it woke waiters with
+`notify_all`, which is kinder than the real instruction. The model had been
+hiding the bug it was written to find. 47/47 on both, now.
+
+---
+
+{/* _id: ceiling */}
+
+## Durability, and the ceiling
+
+Memory is not storage. Persistence means writing the region out, and the only
+durable sink available is one of the other three backings — so the design you
+deleted comes back as an export path, which is fine, because an export is
+allowed to lag.
+
+The ceiling is **4 GiB**: 65,536 wasm pages, verified under COOP/COEP.
+
+Reserving all of it is lazy. Resident memory went from 65 MB to 66 MB to
+reserve four gigabytes.
+
+---
+
+## Before the session
+
+Write the conformance test **on Linux first**. The native run is the oracle;
+without it you cannot tell a wrong answer from an answer you misunderstood.
+
+Then turn the scale up — entries, bytes, writers — until the two hosts
+disagree, and back down until they agree again.
+
+**That threshold is the finding.** It tells you how big a test would have had
+to be, and therefore why nobody wrote it.

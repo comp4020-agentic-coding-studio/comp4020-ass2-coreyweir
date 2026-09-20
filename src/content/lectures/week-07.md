@@ -12,6 +12,7 @@ tags:
   - pipes
   - performance
   - fidelity
+slides: /decks/week-07/
 related:
   - sessions/07-what-does-it-need-from-a-filesystem
   - lectures/week-08
