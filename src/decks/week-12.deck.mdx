@@ -1,0 +1,270 @@
+---
+title: Committing, and changing your mind
+description:
+  Week 12 — what evidence licences a decision, and what a change of mind costs
+  when the thing you built is an execution environment
+---
+
+{/* _class: impact */}
+
+# Committing, and changing your mind
+
+Week 12
+
+---
+
+{/* _id: close */}
+
+## Where we started
+
+Week 1 ended on a problem we have not solved since:
+
+> You will have to choose between them before you have the evidence you would
+> need to choose well.
+
+Twelve weeks of options later, that is still true. What has changed is that you
+now know which evidence is cheap, which is expensive, and which you only get by
+building the thing.
+
+---
+
+{/* _id: artefact */}
+
+## A defensible commitment is a boring document
+
+Not an argument. A table.
+
+| Tried                | Cost                        | What the result eliminated       |
+| -------------------- | --------------------------- | -------------------------------- |
+| the obvious approach | measured, in your own units | named, and narrower than you hoped |
+
+Three columns, and the third is the one people leave out. A thing you tried and
+abandoned is only evidence if you can say what it ruled out — and for whom.
+
+---
+
+{/* _class: impact */}
+
+# A cost estimate you cannot source is a preference.
+
+---
+
+{/* _id: eliminates */}
+
+## What a result that eliminates something looks like
+
+An interpreter running an unmodified riscv64 build of Node. It works: it starts,
+it runs a real agent non-interactively.
+
+Then `fork`. V8's six threads block on per-thread futexes, the scheduler's
+`find_runnable` returns −1, the wait returns `ETIMEDOUT`, glibc starts
+reporting errors, a Node `CHECK` fails, `abort()`, SIGABRT — exit 134.
+
+Twenty-odd fixes. All of them dead ends.
+
+---
+
+## What it actually eliminated
+
+Not interpretation. Not that guest. Not even `fork`.
+
+It eliminated **this interpreter, for a guest with a userspace thread
+scheduler, with no kernel underneath it**.
+
+That is a narrow result, and narrowness is the point. A finding that eliminates
+a whole technique is almost always a finding you have over-read.
+
+---
+
+{/* _id: iterate */}
+
+## Why "make it work, then iterate" does not apply here
+
+The advice is sound everywhere else because it assumes your logic is separable
+from the thing running it. Ship, learn, refactor, keep the valuable parts.
+
+In this field the assumption is false.
+
+You did not build an application. You built an **execution environment**, tuned
+to one target's requirements.
+
+---
+
+## So a change of mind is not a refactor
+
+Change what the target needs and you do not keep the valuable parts. There are
+no valuable parts — there is one artefact, shaped end to end by requirements
+that just moved.
+
+You throw the environment away and build a different one.
+
+This is why the course spent four weeks on characterising a target before it
+spent a week on building anything.
+
+---
+
+{/* _id: scope */}
+
+## Scope decisions are the expensive ones
+
+Not the implementation decisions. The ones you made in week 2, in a paragraph,
+before you had any evidence at all.
+
+And the requirements that decide your fate are not the likely ones. They are
+**the outer reaches** — the capability you assumed was out of scope, which
+turns out to be load-bearing.
+
+A requirement for a desktop, or for native applications, does not extend your
+approach. It invalidates it.
+
+---
+
+{/* _id: aot */}
+
+## One that arrived late
+
+Ahead-of-time translating a RISC-V guest: trace the hot blocks at snapshot-build
+time, generate code for them, ship that.
+
+| Stage                    | Size      |
+| ------------------------ | --------- |
+| traced hot blocks        | 165,264   |
+| generated Rust           | 158 MB    |
+| resulting wasm           | 60.5 MB   |
+
+And still about 95 seconds to a usable TUI.
+
+---
+
+{/* _class: impact */}
+
+# A guest that writes its own code defeats ahead-of-time translation.
+
+---
+
+## That is a requirement, not a bug
+
+V8 emits machine code at runtime, at addresses nothing can predict. No amount
+of tracing covers it, because the code being traced does not exist until the
+guest decides to write it.
+
+Nothing was implemented wrongly. A property of the target — one that was
+visible in week 2, in a sentence about JIT compilation nobody costed —
+invalidated the technique at the point it was most expensive to discover.
+
+The fallback was a real kernel underneath, which does this without being asked.
+
+---
+
+{/* _id: priced-in */}
+
+## Priced-in replacement is not rework
+
+A deliberately temporary layer — chosen knowing you would replace it, with the
+migration costed at the time you chose it — is a **plan**. It is often the
+right call, and it is not a compromise.
+
+Discovering the same fact in week nine is not a plan. It is the same code, the
+same replacement, and a different admission.
+
+The difference is entirely in when you knew, and whether you wrote it down.
+
+---
+
+{/* _id: smallest */}
+
+## The smallest answer usually wins
+
+A runtime two major versions behind. The obvious move is the upgrade: newer
+edition, newer minimum toolchain, everything upstream has fixed since.
+
+The upgrade cost ten workarounds and still could not run a subprocess.
+
+---
+
+## The measurement that settled it
+
+The newer SDK's worker ran substantial code over one shared linear memory, and
+that build had never been linked for threading: **8,733 atomic instructions,
+and no `__wasm_init_tls`**. Every thread-local aliased every other.
+
+Reproducible, every time, as `RuntimeError: function signature mismatch`.
+
+Three different dispatch strategies were tried. All three failed **identically**
+— which is what upgraded a symptom into a general claim:
+
+> a second runtime instance cannot execute guest code while sharing the
+> scheduler's linear memory
+
+---
+
+## What shipped instead
+
+Fifteen lines. A syscall that delegates to the one next to it.
+
+Then three more of the same shape, because once the boundary was the thing
+being fixed, each addition was small and each was testable on its own.
+
+The upgrade was not wrong. It was a larger bet, made on less evidence, that
+would have been harder to abandon.
+
+---
+
+{/* _id: upstream */}
+
+## When to stop, re-scope, or ask upstream
+
+A defect worth the trip upstream looks like this. In one sysroot, `execve`
+compiles to a call plus `unreachable`, and the import is declared as returning
+nothing. So the runtime's `Ok(e)` becomes `Err(Exit(e))`: a *failed* exec ends
+the process.
+
+libc's PATH search is a loop over candidates. It can never reach the second one.
+
+| Invocation          | Result                                        |
+| ------------------- | --------------------------------------------- |
+| `env /bin/printenv` | rc 0                                          |
+| `env printenv`      | no output, rc 126                             |
+| `./script.sh`       | rc **45** — an `errno` leaking as an exit code |
+
+---
+
+## Why that one was worth escalating
+
+It is not a performance characteristic you can design around, and it is not
+your bug. It is a contract stated wrongly in one line of an interface
+definition, and the fix is to route through the call that returns a value.
+
+Three tests told you the shape of it. That is the whole case: reproducible,
+minimal, and attributable to something you do not own.
+
+Knowing which of your problems are yours is most of knowing when to stop.
+
+---
+
+{/* _id: audit */}
+
+## Auditing what you decided in week 4
+
+Your final task asks you to go back to the reduction you wrote at the start and
+mark it yourself.
+
+It is not marked on whether you were right. Being wrong about a target you had
+spent two weeks with is expected, and the people who were right were mostly
+lucky.
+
+It is marked on **calibration** — whether the confidence you expressed then
+matches what you now know, and whether the thing that surprised you was
+something your own evidence should have shown you.
+
+---
+
+## Before the session
+
+Five minutes, no slides.
+
+Bring the commitment, the evidence that licensed it, and the one thing you now
+know that would have changed it.
+
+The room's job is to find the step in your reasoning that your evidence does
+not actually support. Somebody will. That is the exercise working.

@@ -10,6 +10,7 @@ teachers:
 tags:
   - performance
   - interfaces
+slides: /decks/week-12/
 related:
   - sessions/12-defending-the-commitment
   - lectures/week-02
