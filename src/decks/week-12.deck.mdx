@@ -214,31 +214,29 @@ would have been harder to abandon.
 
 ## When to stop, re-scope, or ask upstream
 
-A defect worth the trip upstream looks like this. In one sysroot, `execve`
-compiles to a call plus `unreachable`, and the import is declared as returning
-nothing. So the runtime's `Ok(e)` becomes `Err(Exit(e))`: a *failed* exec ends
-the process.
+Week 5's broken `execve` is the model. Three invocations established the
+shape of it, and the diagnosis was one line of an interface definition
+declaring the wrong return type.
 
-libc's PATH search is a loop over candidates. It can never reach the second one.
+That combination is what makes a defect somebody else's:
 
-| Invocation          | Result                                        |
-| ------------------- | --------------------------------------------- |
-| `env /bin/printenv` | rc 0                                          |
-| `env printenv`      | no output, rc 126                             |
-| `./script.sh`       | rc **45** — an `errno` leaking as an exit code |
+- **reproducible** — three commands, not a story about a flaky run
+- **minimal** — no part of your system is required to demonstrate it
+- **attributable** — the wrong line is in a component you do not own
 
 ---
 
-## Why that one was worth escalating
+## Why it matters which kind you have
 
-It is not a performance characteristic you can design around, and it is not
-your bug. It is a contract stated wrongly in one line of an interface
-definition, and the fix is to route through the call that returns a value.
+A performance characteristic you can design around, you design around. A
+contract stated wrongly, you escalate — because working around it means
+encoding someone else's error into your own design, permanently, where the
+next person will find it and assume you meant it.
 
-Three tests told you the shape of it. That is the whole case: reproducible,
-minimal, and attributable to something you do not own.
+Knowing which of your problems are actually yours is most of knowing when to
+stop.
 
-Knowing which of your problems are yours is most of knowing when to stop.
+Most engineers escalate too late, and the reason is almost never technical.
 
 ---
 
