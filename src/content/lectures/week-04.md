@@ -31,17 +31,20 @@ requirement.
 The first set is empty and the second is nearly empty, which tells you the
 toolchain was never the problem. Compilation is solved. Interfaces are not.
 
-Qt for WebAssembly is the honest catalogue. Every `Q*Server` class is
-unsupported, so nothing listens. `QSsl` and `QDnsLookup` do not function,
-because the browser owns DNS and TLS. WebGL permits one context per surface with
-no sharing, so `QOpenGLWidget` is out. And `app.exec()` never returns, so
-destructors never run — a nested event loop needs Asyncify or JSPI to exist at
-all.
+Qt's WebAssembly port publishes an honest catalogue of what it cannot do, and
+it reads as a list of interfaces rather than a list of bugs. Nothing can
+listen, because there are no server sockets. The TLS and DNS classes do not
+function, because the browser owns both. The widget that wraps a drawing
+context is unavailable, because you get one context per surface and cannot
+share between them. And the call that runs the application never returns, so
+destructors never run — which means a dialog that waits for an answer does not
+work, because waiting is the thing you cannot do.
 
-LibreOffice is the same lesson at scale: the WebAssembly build is **Writer
-only**, linking may need 64 GB of RAM, and the blocker is architectural rather
-than mechanical — dialogs are a nested event loop, and fixing that means
-"basically dropping `Application::Execute`".
+LibreOffice is the same lesson at scale. The WebAssembly build is **Writer
+only**, and linking it may need sixty-four gigabytes of memory. But the real
+blocker is architectural rather than mechanical: dialogs are implemented by
+running a second event loop inside the first, and the browser has exactly one.
+Fixing it means removing the mechanism the entire application is built on.
 
 There is an ordering to how things break, and weeks 5 to 11 follow it.
 

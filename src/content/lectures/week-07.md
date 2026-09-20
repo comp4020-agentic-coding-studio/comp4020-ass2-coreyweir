@@ -28,13 +28,17 @@ a filesystem living inside shared WebAssembly memory. Each buys something and
 costs something, and OPFS in particular is worker-only and takes an exclusive
 lock by default.
 
-Then the semantics bite. One runtime treated a readdir cookie as a positional
-index into a freshly re-listed directory, so entries deleted between calls
-shifted the cursor past live ones. The same C source passed forty checks on
-glibc and failed ten under WASIX — and at the 128-byte buffer size that Rust's
-directory iterator uses, deleting a thousand files **left four hundred and
-ninety-eight of them**. Silently. Below about a hundred and thirty entries it
-never appears at all.
+Then the semantics bite. Reading a large directory takes several calls, and
+between them the program is allowed to delete things. One runtime rebuilt the
+listing on every call and remembered its place as a position in that list — so
+each deletion shifted everything after it, and the cursor stepped straight over
+live entries.
+
+The same program, compiled twice: forty checks passed on Linux, ten failed in
+the browser. At the buffer size a common standard library actually uses,
+deleting a thousand files **left four hundred and ninety-eight of them**, with
+no error. Below about a hundred and thirty files it does not happen at all,
+which is why it survived everybody's tests.
 
 The week's real subject is coherence. When a JavaScript runtime and a WASIX
 runtime must see one filesystem rather than two synchronised copies, the

@@ -1,8 +1,8 @@
 ---
 title: The web is not POSIX-compatible (i)
 description:
-  What a POSIX surface has to provide, what WASI and WASIX actually deliver, and
-  what happens when a syscall is present but wrong
+  What a kernel-shaped surface has to provide, how much of it the web standards
+  deliver, and what happens when a call is present but wrong
 week: 5
 date: 2027-03-22
 teachers:
@@ -18,36 +18,42 @@ related:
   - lectures/week-06
   - lectures/week-03
 links:
-  - label: "WASIX — the extended syscall surface"
+  - label: "WASI — the base system interface"
+    url: https://wasi.dev/
+  - label: "WASIX — the extended one"
     url: https://wasix.org/
 ---
 
-Week 4 ended at an interface. This week and next are the general answer: give
-the program a kernel-shaped surface and compile against that instead.
+Week 4 ended at an interface, and the week before that ended at a wall. The
+general answer to both is to stop implementing interfaces one at a time, and
+give the program a kernel-shaped surface to compile against instead.
 
-WASI preview1 is 46 functions. It has exactly four socket calls —
-`sock_accept`, `sock_recv`, `sock_send`, `sock_shutdown` — so you may operate on
-a socket somebody handed you, and you may not create or connect one. It has no
-`chdir` and no `getcwd`; a working directory is a fiction maintained in libc
-userspace. There is no `fd_pipe`, no `fork`, no `exec`, no threads, no signals
-worth the name. Filesystem access is capability-scoped: no absolute paths, only
-`path_open` relative to a preopened directory handle carrying a rights mask.
+The standard surface is deliberately small — forty-six calls. Four of them
+concern sockets, which is enough to read from and write to a socket somebody
+handed you and not enough to open one. There is no working directory, so a
+program that thinks it has one is really talking to its own C library, which is
+keeping a string on its behalf. There are no pipes, no processes, no threads,
+and signals in name only. Files are reached through a directory handle granted
+at startup rather than by absolute path, so a program can only see what the
+host decided to hand it.
 
-WASIX adds roughly ninety-five calls on top — processes, threads, real sockets,
-`chdir`, `fd_pipe`, `dup2`, `epoll`, a TTY — and that is enough to run a shell.
+The extended surface adds around ninety-five more calls — processes, threads,
+sockets you can actually open, a working directory, pipes, a terminal — and
+somewhere in there a shell becomes possible.
 
-Then the harder lesson: **a syscall can be present and still wrong.** In one
-wasix-libc sysroot, `execve` compiled to an imported function declared with *no
-result*, followed by `unreachable`. A failed exec therefore killed the process
-instead of returning `errno`, so musl's userspace PATH loop could never reach
-its second candidate. `env printenv` returned nothing; `env /bin/printenv`
-worked. That was diagnosed by disassembling `libc.a` to WAT.
+Then the harder lesson, and the one worth carrying: **a call can be present and
+still be wrong.** In one build, the function that replaces a running program
+with a different one was compiled so that it had no way to report failure. It
+could only succeed or end the process. A shell looking for a command tries each
+directory on its search path in turn — so the first miss killed the program
+before the second could be attempted. Asking for a command by its full path
+worked perfectly. Asking for it by name did nothing at all, and said nothing.
 
 ## Outline
 
-- what a POSIX surface must provide
-- preview1's 46 functions and their gaps
-- what WASIX adds, and why a shell becomes possible
-- pipes, and why they keep returning
-- packaging: WEBc, and multicall binaries dispatching on `argv[0]`
-- present-but-wrong: the `execve` import with no result
+- what a kernel-shaped surface has to provide
+- the standard forty-six, and the shape of their gaps
+- what the extended surface buys, and what it costs to maintain
+- pipes, and why they keep coming back
+- how a program is packaged and delivered
+- present-but-wrong, and how you would find it
