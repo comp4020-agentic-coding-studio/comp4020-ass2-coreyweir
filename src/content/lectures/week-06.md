@@ -12,6 +12,7 @@ tags:
   - pipes
   - performance
   - fidelity
+slides: /decks/week-06/
 related:
   - sessions/06-tested-in-node-broken-in-a-tab
   - lectures/week-07

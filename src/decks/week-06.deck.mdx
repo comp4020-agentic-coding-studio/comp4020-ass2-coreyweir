@@ -1,0 +1,202 @@
+---
+title: The web is not POSIX-compatible (ii)
+description:
+  Week 6 — the main thread may not block, what that does three layers down,
+  and why a thousand passing tests did not notice
+---
+
+{/* _class: impact */}
+
+# The web is not POSIX-compatible (ii)
+
+Week 6
+
+---
+
+{/* _id: page */}
+
+## Last week assumed an operating system underneath
+
+A page is not one.
+
+It is a single main thread, some workers, and message passing where you wanted
+processes. Workers do not share a heap unless you arrange it. There is no
+scheduler you can talk to. There is no parent and no child.
+
+Everything in week 5's extended surface has to be built out of that.
+
+---
+
+{/* _class: impact */}
+
+# The main thread may not block.
+
+---
+
+## Not "should not". May not.
+
+The instruction that makes a thread wait on a memory address **throws** on the
+main thread. The specification says that agent is not allowed to block, so the
+call does not sleep — it raises.
+
+Every blocking primitive you have is built on that instruction. Mutexes.
+Condition variables. Joins. Sleeps.
+
+So the question is not whether your runtime blocks. It is what happens when
+the thing it is built on refuses.
+
+---
+
+{/* _id: chain */}
+
+## What that does three layers down
+
+A program asks to read from its input.
+
+1. the runtime's read implementation decides it must wait
+2. it calls its "just block until this is ready" helper
+3. which parks the thread on a mutex and a condition variable
+4. which is the instruction that may not run here
+
+---
+
+## And the part that makes it a deadlock
+
+The thread now frozen is **the thread that was going to deliver the bytes**.
+
+The pump that moves input into the guest runs on the main thread. It cannot
+run, because the main thread is parked waiting for the pump to run.
+
+Nothing in the guest program is wrong. Nothing in the host's logic is wrong.
+The only fault is a control-flow assumption made on a machine where it held.
+
+---
+
+{/* _id: green */}
+
+## It shipped, behind a green suite
+
+The same runtime, the same code, is **fine under Node** — Node's main thread
+is permitted to block, so the parking primitive works exactly as its author
+intended.
+
+The deadlock sat dormant in released code behind **more than a thousand
+passing tests**.
+
+---
+
+{/* _class: impact */}
+
+# The host you tested on was more permissive than the host you shipped to.
+
+---
+
+## That sentence is a thread, not an anecdote
+
+You will meet it again next week, with a completely different mechanism —
+directory enumeration instead of thread parking — and the same structure: a
+test environment that is kinder than production, and a green suite that is
+evidence about the suite.
+
+When you build a test host for a browser target, the interesting question is
+not "does it pass". It is **"what is my test host willing to do that the
+browser is not?"**
+
+---
+
+{/* _id: asyncify */}
+
+## Unwinding and resuming a call stack
+
+The compiler-level escape: transform the compiled program so it can save its
+own call stack into linear memory, return to the browser mid-call, and resume
+later from exactly where it stopped.
+
+It is a whole-program transformation, and it works. Any call that might
+suspend becomes a call that can be rewound through.
+
+---
+
+## What it costs
+
+Around **50% code size** on average. Worst observed around **2×**, with a
+**5× outlier** on SQLite.
+
+That is not a rounding error on a download you already worried about, and the
+cost lands on every path, including the ones that never suspend.
+
+Which is why the interesting engineering is in *not applying it everywhere* —
+and why the next slide is the trap.
+
+---
+
+## The trap: two things with almost the same name
+
+One helper is the real transformation: it genuinely unwinds and resumes, and
+the deep-sleeping calls use it.
+
+Another helper is named as though it were, and is not. It is an inline
+condition-variable loop — it **blocks**, on the thread it is called from.
+
+Ordinary reads went through the second one. The names suggested the problem
+was already solved, and the names were the only documentation.
+
+---
+
+{/* _id: sab */}
+
+## Shared memory, and the bargain
+
+| When          | What happened                                        |
+| ------------- | ---------------------------------------------------- |
+| July 2017     | shared memory ships in Chrome                        |
+| 3 Jan 2018    | Spectre                                              |
+| 4 Jan 2018    | Firefox disables it, and cuts its clock to 20 µs     |
+| July 2018     | Chrome brings it back, desktop only                  |
+| July 2020     | Firefox, but only for isolated pages                 |
+| July 2021     | Chrome, same condition                               |
+| December 2021 | Safari                                               |
+
+A precise timer plus shared memory is a side-channel. Both halves went.
+
+---
+
+## What "isolated" costs you
+
+You get shared memory back by cutting the page off: refuse to be scripted by
+other windows, and refuse any resource that has not explicitly agreed to be
+embedded.
+
+That is a **deployment** decision with nothing to do with your program.
+Switching it on is how you discover that login popups are a cross-window
+scripting relationship, and that you have just broken sign-in.
+
+Threads cost you OAuth. Price it in week 2, not week 10.
+
+---
+
+{/* _id: shim */}
+
+## When a shim beats a compiler
+
+The whole-program transformation is the general answer, and general answers
+are expensive.
+
+Often the cheaper fix is at the boundary: make the thing being waited on never
+require waiting. Pre-register the channel so the reply cannot arrive before
+anyone is listening. Move the one blocking call to a worker that **is**
+allowed to block.
+
+The difference between a fix and a workaround is whether you can say which
+invariant now holds — not whether it stopped happening.
+
+---
+
+## Before the session
+
+Run something that works in Node in a browser tab instead, and find the first
+place they disagree.
+
+Then explain the difference in terms of what the **host** permits, not what
+the program does. If your explanation mentions only your own code, you have
+not found it yet.
