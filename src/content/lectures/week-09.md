@@ -11,6 +11,7 @@ tags:
   - processes
   - performance
   - fidelity
+slides: /decks/week-09/
 related:
   - sessions/09-could-it-run-unmodified
   - lectures/week-10

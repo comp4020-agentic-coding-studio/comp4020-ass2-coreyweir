@@ -1,0 +1,209 @@
+---
+title: Running "native" binaries
+description:
+  Week 9 — four techniques hiding under one word, and the limit that no amount
+  of ahead-of-time work can cross
+---
+
+{/* _class: impact */}
+
+# Running "native" binaries
+
+Week 9
+
+---
+
+{/* _id: no-source */}
+
+## Take the source requirement away
+
+Every option so far wanted the source, or at least a rebuild.
+
+This one does not — which matters a great deal when the thing you want to run
+is somebody else's release artefact, built against a libc you do not have, by
+a toolchain you cannot reproduce, from code you may not be allowed to read.
+
+---
+
+{/* _class: impact */}
+
+# Four techniques hide under one word, and only the first is emulation.
+
+---
+
+{/* _id: four */}
+
+## Interpretation
+
+Decode one instruction, dispatch it, move on.
+
+Slow. Simple. Almost always correct — and it will run an unmodified binary for
+an architecture your machine has never physically had.
+
+It is also the only one of the four you can finish. A correct interpreter is a
+weekend of tedium per instruction class; every other technique has a research
+problem in it.
+
+---
+
+## Just-in-time translation
+
+Measure which code is hot. Compile **that**, at runtime, into WebAssembly
+modules, and call them.
+
+You keep the interpreter — it is what runs everything cold, and what you fall
+back to when the assumptions the compiled version made stop holding.
+
+This is the mature answer. It is what the browser's own JavaScript engine does
+to your code, one level up.
+
+---
+
+## Static binary translation
+
+Convert the whole binary before it runs.
+
+This is the hard one, and the difficulty is not engineering. A translator must
+decide, **statically**:
+
+- which bytes are code and which are data
+- where every indirect jump can land
+- what a computed address means when the value is computed at runtime
+
+Those are undecidable in general. Which is why the serious work here is
+compiler research rather than tooling.
+
+---
+
+## Trace-driven translation
+
+A fourth thing, and genuinely distinct: run a **real workload**, record which
+blocks it actually executed, translate exactly those ahead of time, and
+interpret the rest.
+
+It sidesteps the undecidable question by not asking it. You are not proving
+what the program can do. You are recording what it did.
+
+Which works exactly as well as your trace was representative.
+
+---
+
+## Four techniques, side by side
+
+| Technique         | Needs           | Fails when                              |
+| ----------------- | --------------- | --------------------------------------- |
+| interpret         | nothing         | you wanted it to be fast                |
+| JIT               | a warm-up       | the workload is all cold start          |
+| static translation | the whole binary | control flow is computed               |
+| trace-driven      | a representative run | the real run differs from the trace |
+
+Notice that only the first row has no conditions on the guest.
+
+---
+
+{/* _id: delivered */}
+
+## What the field has actually delivered
+
+Narrower than you would guess, and better than you would fear.
+
+The strongest published result translates Linux binaries to WebAssembly at
+**78–96%** of natively-compiled WebAssembly — against roughly **ten times
+worse** for emulation, by that project's own measurement.
+
+Which sounds like the argument is over.
+
+---
+
+## Read the conditions
+
+- **AArch64 only.** x86-64 is in progress.
+- **Statically linked only.** No shared objects.
+- and its published numbers are best in the browser configuration; the
+  system-interface target is worse
+
+Its own predecessor went from RISC-V instead, reached "only trivial programs
+work", and was archived.
+
+Beyond those, translators for other architectures exist largely as student
+projects.
+
+---
+
+{/* _class: impact */}
+
+# That is not a gap in the literature. It is a verdict from it.
+
+---
+
+## Which is a useful kind of finding
+
+The technique is understood. The papers exist. Nobody finished a general one,
+not because it is impossible, but because it rarely repays the effort against
+the alternatives.
+
+"Somebody would have done this by now" is a weak argument in general and a
+strong one here, because the people who would have done it published their
+attempts.
+
+---
+
+{/* _id: limit */}
+
+## The limit, and it is the elegant part
+
+One project traced a real workload, translated every hot block ahead of time,
+and brought a cold start from **fifteen minutes to eighteen seconds**.
+
+| Stage             | Result    |
+| ----------------- | --------- |
+| hot blocks traced | 165,264   |
+| generated code    | 158 MB    |
+| resulting wasm    | 60.5 MB   |
+
+And it still could not cover the guest's own compiler.
+
+---
+
+{/* _class: impact */}
+
+# A runtime that writes its own machine code writes it at addresses no static translator can predict.
+
+---
+
+## Why no amount of tracing fixes it
+
+The code being translated **does not exist** until the guest decides to emit
+it, and where it lands differs between runs.
+
+You cannot trace it, because it is not in the binary. You cannot translate it
+ahead of time, because "ahead of time" is before it was written.
+
+So a modern language runtime — the JavaScript engine inside your target, the
+JIT inside its VM — is the one guest that defeats this entire technique, and
+it is also the guest most people actually want to run.
+
+---
+
+## What that means for your target
+
+Ask one question of it: **does it generate code at runtime?**
+
+If it does, ahead-of-time translation is bounded above by the fraction of your
+workload that is not the JIT — and for an interactive program, that fraction
+is small and arrives late.
+
+The answer is next week: stop translating, and put a real kernel underneath.
+
+---
+
+## Before the session
+
+Take a binary for an architecture you do not have and get it to run
+unmodified. Then measure the thing that actually hurts.
+
+Not throughput. **Time to first useful output**, and how much of that was
+cold.
+
+Bring the number. The room's numbers will differ by two orders of magnitude,
+and the reason will be which of the four techniques each of you used.
