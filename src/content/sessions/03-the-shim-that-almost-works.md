@@ -6,6 +6,7 @@ description:
 week: 3
 date: 2027-03-08
 teachers:
+  - nadia-osei
   - tobias-lin
 tags:
   - polyfills

@@ -6,6 +6,8 @@ description:
 week: 7
 date: 2027-04-12
 teachers:
+  - corey-weir
+  - nadia-osei
   - tobias-lin
 tags:
   - filesystem

@@ -6,6 +6,7 @@ description:
 week: 9
 date: 2027-04-26
 teachers:
+  - nadia-osei
   - tobias-lin
 tags:
   - processes

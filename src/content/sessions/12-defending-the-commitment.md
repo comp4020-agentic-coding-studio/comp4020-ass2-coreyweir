@@ -7,6 +7,7 @@ week: 12
 date: 2027-05-17
 teachers:
   - nadia-osei
+  - tobias-lin
 tags:
   - performance
 spec:

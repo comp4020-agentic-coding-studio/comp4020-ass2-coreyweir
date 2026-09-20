@@ -6,6 +6,7 @@ description:
 week: 4
 date: 2027-03-15
 teachers:
+  - nadia-osei
   - tobias-lin
 tags:
   - interfaces

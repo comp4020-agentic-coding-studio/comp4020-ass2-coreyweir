@@ -6,6 +6,8 @@ description:
 week: 1
 date: 2027-02-22
 teachers:
+  - corey-weir
+  - nadia-osei
   - tobias-lin
 tags:
   - performance

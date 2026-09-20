@@ -6,6 +6,8 @@ description:
 week: 8
 date: 2027-04-19
 teachers:
+  - corey-weir
+  - nadia-osei
   - tobias-lin
 tags:
   - network

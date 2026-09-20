@@ -6,6 +6,7 @@ description:
 week: 10
 date: 2027-05-03
 teachers:
+  - nadia-osei
   - tobias-lin
 tags:
   - performance

@@ -5,7 +5,7 @@ description:
   software run where it was not invited
 role: Convenor and lecturer
 email: corey.weir@slop.university
-contact: Office hours Wednesdays 14:00–16:00, or catch them in a session
+contact: Office hours Wednesdays 14:00–16:00
 ---
 
 Corey convenes SLOP8815 because nobody stopped them.
@@ -17,6 +17,7 @@ syscall surface than is strictly healthy, maintain patches to a shell they did
 not write, and once spent six weeks establishing that something was possible
 after being told it wasn't.
 
-They are a patient supervisor of other people's rabbit holes. If you come to a
-session certain your target cannot work, they will ask what you measured. Then
-they will ask again, more precisely. Eventually one of you will be right.
+They are a patient supervisor of other people's rabbit holes. If you come to
+one of the sessions they actually turn up to, certain your target cannot work,
+they will ask what you measured. Then they will ask again, more precisely.
+Eventually one of you will be right.
