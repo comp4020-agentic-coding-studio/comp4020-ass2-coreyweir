@@ -1,8 +1,8 @@
 ---
 title: Graphics
 description:
-  The week where the choice you made in February decides what you are allowed
-  to draw with
+  Of everything an approach quietly decides on your behalf, the rendering path
+  is the least negotiable
 week: 11
 date: 2027-05-10
 teachers:
@@ -25,9 +25,10 @@ links:
     url: https://labs.leaningtech.com/blog/webvm-20
 ---
 
-Nothing else in this course constrains you as sharply as this. The rendering
-path was not chosen in week 11 — it was decided by the approach you committed
-to, and this is the week you find out what that left you.
+Graphics is where an approach stops being a choice and becomes a constraint. By
+the time a program needs to draw, the route taken to get it running has already
+settled what it can draw with — and the four routes in this course lead to four
+quite different answers, none of which is a preference.
 
 **You compiled the application.** You get the browser's own graphics APIs, and
 you rewrite whatever your program used to call. One drawing context per
