@@ -20,7 +20,7 @@ links:
     url: https://developer.mozilla.org/en-US/docs/Glossary/Forbidden_request_header
   - label: "Direct Sockets API (not available to the web)"
     url: https://wicg.github.io/direct-sockets/
-  - label: "A WireGuard client compiled to WebAssembly"
+  - label: "Tailscale's browser client — a subset of its API, compiled to WebAssembly"
     url: https://pkg.go.dev/tailscale.com/cmd/tsconnect/wasm
 ---
 
@@ -50,13 +50,19 @@ a clean round trip; another, one line of configuration away, gives you a 502
 before your code sees anything. A proxy fixes this only by becoming the origin,
 which is how you accidentally ship an open egress service.
 
-There are two honourable ways out, and both change what you are building. You
-can **relay**: tunnel the connection over a WebSocket to something holding a
-real socket, which is how the x86 emulator from week 1 does its networking. Or
-you can **stop being a web page**: a WireGuard client compiled to WebAssembly
-gives the guest a genuine network, and the origin's opinion stops mattering
-because you are no longer making web requests. Each buys reachability by
-adding infrastructure somebody has to run.
+There are two honourable ways out, and **neither escapes relaying** — because
+the browser cannot send a UDP packet either, so anything below HTTP must be
+tunnelled to something that can. You can relay **explicitly**: carry the
+connection over a WebSocket to a server holding a real socket, which is how the
+x86 emulator from week 1 does its networking. Or you can relay **into a private
+network**: a VPN client compiled to WebAssembly reaches its vendor's relay over
+a WebSocket, because its own protocol is UDP, and from there traffic egresses
+through machines you control.
+
+The second is not less of a relay. It is a relay with an owner, an identity
+model and a routing table — and the origin's opinion stops mattering because
+you are no longer making web requests at all. Both buy reachability by adding
+infrastructure somebody has to run.
 
 ## Outline
 

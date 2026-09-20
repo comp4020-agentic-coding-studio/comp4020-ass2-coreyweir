@@ -28,17 +28,22 @@ a filesystem living inside shared WebAssembly memory. Each buys something and
 costs something, and OPFS in particular is worker-only and takes an exclusive
 lock by default.
 
-Then the semantics bite. Reading a large directory takes several calls, and
-between them the program is allowed to delete things. One runtime rebuilt the
-listing on every call and remembered its place as a position in that list — so
-each deletion shifted everything after it, and the cursor stepped straight over
-live entries.
+Then the semantics bite. A program listing a directory rarely makes the system
+call itself — it asks its standard library, which fetches a batch of entries
+into a fixed-size buffer and asks again until the directory runs out. Between
+those requests the program is free to delete things, and deleting as you
+enumerate is exactly what a recursive delete does.
+
+One approach rebuilt the listing from scratch on each request and remembered
+its place as a *position* in that list. Every deletion shifted the remaining
+entries up, so the next request resumed past files that were still there.
 
 The same program, compiled twice: forty checks passed on Linux, ten failed in
-the browser. At the buffer size a common standard library actually uses,
-deleting a thousand files **left four hundred and ninety-eight of them**, with
-no error. Below about a hundred and thirty files it does not happen at all,
-which is why it survived everybody's tests.
+the browser. At the buffer size one common standard library uses, deleting a
+thousand files **left four hundred and ninety-eight of them**, with no error.
+Below about a hundred and thirty files the whole directory arrives in a single
+batch — there is never a second request, so the bug does not exist. Which is
+why it survived everybody's tests.
 
 The week's real subject is coherence. When a JavaScript runtime and a WASIX
 runtime must see one filesystem rather than two synchronised copies, the

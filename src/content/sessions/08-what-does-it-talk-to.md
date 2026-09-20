@@ -34,14 +34,20 @@ mistake this session exists to prevent. A raw TCP service, a UDP protocol, or
 anything that listens will not answer a browser request at all. For those the
 question is not "does it work" but "what shape of answer is available":
 
-- **A relay.** Tunnel the connection over a WebSocket to something that holds
-  the real socket. This is not a hack of last resort — the x86 emulator you
+- **A relay you run.** Tunnel the connection over a WebSocket to something
+  holding the real socket. Not a hack of last resort — the x86 emulator you
   used in week 1 does exactly this for its networking.
-- **A real network stack.** Bring a VPN into the page: a WireGuard client
-  compiled to WebAssembly gives the guest genuine reachability, and CORS stops
-  being the question because you are no longer making web requests.
+- **A relay somebody else runs.** A VPN client compiled to WebAssembly puts the
+  page on a private network. Note that it is still relaying over a WebSocket,
+  because its own transport is UDP and the browser cannot send one; what you
+  gain is an identity model, a routing table, and egress from machines you
+  control rather than from the page.
 - **Change the protocol**, if you control both ends.
 - **Move the requirement**, if it turns out nobody needed UDP after all.
+
+Notice that the first two are the same mechanism. Nothing below HTTP leaves a
+browser without being tunnelled by something, and the interesting differences
+are about ownership and abstraction rather than transport.
 
 Each of those costs something — a server you now run, a network you now join,
 a protocol you now maintain. Price at least one of them.

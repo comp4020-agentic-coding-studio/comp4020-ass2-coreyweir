@@ -18,7 +18,7 @@ related:
 links:
   - label: "elfconv — ahead-of-time translation of Linux ELF to WebAssembly"
     url: https://github.com/yomaytk/elfconv
-  - label: "MyAOT — its predecessor, riscv32 ELF to WebAssembly"
+  - label: "MyAOT — elfconv's predecessor: RISC-V ELF to C, and from there to WebAssembly"
     url: https://github.com/AkihiroSuda/myaot
   - label: "Biotite: lifting RV64GC to LLVM IR (Compiler Construction 2025)"
     url: https://dl.acm.org/doi/10.1145/3708493.3712693
@@ -49,9 +49,10 @@ the rest.
 What the field has achieved is narrower than you would guess and better than
 you would fear. The strongest published result translates Linux binaries to
 WebAssembly at 78–96% of natively-compiled WebAssembly, against roughly ten
-times worse for emulation — but only for one architecture, and only for
-statically linked programs. Beyond that, RISC-V-to-WebAssembly translators
-exist largely as student projects. That is not a gap in the literature so much
+times worse for emulation — but only for one architecture (AArch64), and only
+for statically linked programs. Its own predecessor went from RISC-V, and got
+as far as "only trivial programs work" before being archived. Beyond that,
+RISC-V-to-WebAssembly translators exist largely as student projects. That is not a gap in the literature so much
 as a verdict from it: the technique is understood, and it rarely repays the
 effort.
 

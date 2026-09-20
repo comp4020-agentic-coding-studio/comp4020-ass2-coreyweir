@@ -31,7 +31,7 @@ One consequence outweighs the rest: **the browser forbids the main thread from
 blocking.** A call that would put that thread to sleep does not sleep — it
 throws.
 
-Follow a runtime that was written for a desktop, where blocking is the most
+Consider a runtime that was written for a desktop, where blocking is the most
 ordinary thing in the world. A program asks to read from its input. The runtime
 does what it has always done and blocks the thread until bytes arrive. That
 thread is the one that was going to deliver the bytes. The program hangs
