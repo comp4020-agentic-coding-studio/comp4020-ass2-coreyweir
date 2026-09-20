@@ -11,6 +11,7 @@ tags:
   - network
   - pipes
   - processes
+slides: /decks/week-08/
 related:
   - sessions/08-what-does-it-talk-to
   - lectures/week-09

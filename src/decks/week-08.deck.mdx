@@ -1,0 +1,241 @@
+---
+title: The network
+description:
+  Week 8 — building a socket out of message passing, and discovering that the
+  wall was never TCP
+---
+
+{/* _class: impact */}
+
+# The network
+
+Week 8
+
+---
+
+{/* _id: offers */}
+
+## What a page is given, and who has to consent
+
+| Transport      | The other end must                          |
+| -------------- | ------------------------------------------- |
+| `fetch`        | opt in, to let you **read** the reply       |
+| WebSocket      | speak RFC 6455                              |
+| WebRTC         | negotiate, with signalling you provide      |
+| WebTransport   | speak HTTP/3 and want to                    |
+
+Everything except `fetch` requires the peer to have been built for you. And
+`fetch` cannot express the one thing you want: *open a byte stream to this
+host and port*.
+
+---
+
+## There is a real sockets API
+
+It is specified. It is implemented. Its permissions policy defaults to an
+allowlist of **nobody**, and it is reachable only from installed applications
+with their own isolation model.
+
+So it exists, and it is not available to you, and knowing that precisely is
+better than believing the platform simply forgot.
+
+---
+
+{/* _id: virtual */}
+
+## A socket made of messages
+
+Serialise every socket operation into a frame. Ship the frames over a
+transferred message port. Have something on the other side answer them.
+
+That something allocates socket identifiers, answers DHCP with an address it
+invented, reports a MAC and a TTL, refuses every `listen` and `bind` outright,
+and pushes an initial write window so the guest can start sending before
+anyone has agreed to receive.
+
+It is a network interface. It is also a few thousand lines of your code, and
+now you own a network stack's worst half.
+
+---
+
+## One detail that will bite you
+
+The frames are a binary encoding of a tagged union, and the tag is the
+variant's **index**.
+
+Fifty-six variants. Add one in the middle and every message after it decodes
+as something else — plausibly, silently, with no error.
+
+The wire format is an ordered list, and ordered lists in source code do not
+look like wire formats.
+
+---
+
+{/* _id: interrupts */}
+
+## What is doing the kernel's job?
+
+Single thread. No hardware. No interrupt controller. And yet something has to
+notice that bytes arrived while the guest was busy.
+
+**The JavaScript event loop is the interrupt controller.**
+
+`postMessage` is the interrupt. The message handler is the service routine.
+The future driver is the bottom half.
+
+---
+
+## Four bugs, one discipline failing
+
+- a timer worker **parked inside a WebAssembly call** could not service the
+  port it was waiting on, so `curl`'s clock stopped
+- readiness signalled as an **edge** where the consumer expected a level, so
+  a wakeup that arrived early was a wakeup that never happened
+- write-readiness delegated to read-readiness, which is correct exactly until
+  it is not
+- a channel registered **after** the connect resumed, dropping the immediate
+  send that had already happened
+
+---
+
+## And the fix for the last one is the lesson
+
+The channel is now registered **before** the connect can resume — rather than,
+in the author's words, "hiding it with a timeout".
+
+A timeout would have worked. It would also have converted a race into a
+latency figure and left the invariant unstated.
+
+If you cannot name the ordering your fix establishes, you have tuned it, not
+fixed it.
+
+---
+
+{/* _id: reorigination */}
+
+## Then the wall — and it was never TCP
+
+There is no TCP to be blocked by. Every byte ends up inside a `fetch`, and a
+cross-origin `fetch` is only *readable* if the origin says so.
+
+| Endpoint                                     | Result                          |
+| -------------------------------------------- | ------------------------------- |
+| one that returns `Access-Control-Allow-Origin: *` | 200, with the guest's `Authorization` intact |
+| one that does not                            | **502, before your code sees anything** |
+
+One line of someone else's configuration apart.
+
+---
+
+## What cannot survive re-origination
+
+- `Set-Cookie` is not visible to you, so the guest never learns it was set
+- compressed bodies are silently decoded, so `content-encoding` and
+  `content-length` are stripped and the body is re-framed
+- a manual redirect yields an opaque response, so a 3xx reaches the guest as
+  `HTTP/1.1 0 OK`
+
+That last one had **no test covering it**, which is the honest kind of thing
+to put on a slide.
+
+---
+
+{/* _class: impact */}
+
+# Forbidden request headers make the guest's byte-exact request unreproducible by construction.
+
+---
+
+## Which is a stronger statement than it sounds
+
+`Host`, `Origin`, `Connection`, `Cookie`, every `Sec-` header: not "discouraged".
+**Cannot be set.**
+
+So you are not proxying the guest's request. You are issuing a different
+request that resembles it, and every difference is one the server is entitled
+to care about.
+
+This is why package managers fail here and not for want of bandwidth: a
+distribution mirror sends no CORS headers, so the fetch is unreadable and the
+install dies at the first index.
+
+---
+
+{/* _id: cors */}
+
+## CORS is the trust boundary, and a proxy does not remove it
+
+A proxy fixes CORS by **becoming the origin**. The request now genuinely comes
+from a server you run, so of course it is allowed.
+
+One project deleted its gateway route for exactly this reason: it had "made
+the application server an unauthenticated arbitrary egress service".
+
+That is not a security oversight. It is what a CORS proxy **is**, described
+accurately.
+
+---
+
+{/* _id: relay */}
+
+## Two honourable ways out, and neither escapes relaying
+
+The browser cannot send a UDP packet. So anything below HTTP must be tunnelled
+to something that can.
+
+- **Relay explicitly** — carry the connection over a WebSocket to a server
+  holding a real socket. Week 1's x86 emulator does exactly this.
+- **Relay into a private network** — a VPN client compiled to WebAssembly,
+  reaching its vendor's relay over a WebSocket because its own protocol is
+  UDP.
+
+---
+
+## The second is not less of a relay
+
+It is a relay **with an owner**: an identity model, a routing table, and
+machines you control at the egress.
+
+What changes is not the mechanism. It is that the origin's opinion stops
+mattering, because you are no longer making web requests at all.
+
+Both buy reachability by adding infrastructure somebody has to run, and
+"somebody has to run it" is the cost that never appears in the prototype.
+
+---
+
+{/* _id: tls */}
+
+## Terminating TLS in the tab
+
+To speak to an unmodified HTTPS client you must be a TLS server. So: TLS 1.3
+only, one cipher suite, one key-exchange group, one signature algorithm, no
+resumption. An ephemeral certificate authority, generated in the page, issuing
+a leaf per hostname on demand. The private key never leaves the tab.
+
+Every one of those is a red flag in a security review.
+
+---
+
+## And it is still the right design
+
+Because **it is not the trust boundary**.
+
+This TLS session is a loopback between a client and a JavaScript object inside
+one page. Nothing crosses a network. The real origin authentication happens
+afterwards, when the host issues the actual `fetch`.
+
+Pinning, certificate transparency or OCSP would all fail here — correctly, and
+for the same reason: they are checks on a boundary this is not.
+
+Knowing which of your boundaries is load-bearing is the whole skill.
+
+---
+
+## Before the session
+
+Find out what your target talks to, and for each endpoint answer one question:
+**would a cross-origin `fetch` from a page be allowed to read the reply?**
+
+Then check, rather than reasoning about it. The answer is a response header,
+and it is either there or it is not.
