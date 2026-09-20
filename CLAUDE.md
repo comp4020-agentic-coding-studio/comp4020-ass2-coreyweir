@@ -93,6 +93,11 @@ A3 adjustment, and calibration of the A1 audit.
 - Trade-offs, never feasibility. Reduce the justifiable set; do not "rule out".
 - `src/course-config.ts` and the content collections are the source for course
   facts. Do not restate a date, a weight or a code in prose where it can drift.
+- **Open every source before citing it.** A link label is a claim about what is
+  on that page, so write it from the page — never from memory, never from a
+  summary, and never from a URL I handed you without reading it first. Getting
+  this wrong has cost us twice; the failure is treating a URL as a fact to
+  paraphrase rather than a document to read.
 - Bernhardt's talk is a citation, not a costume. The course tests the claim that
   "it's just compilers"; it does not retell the joke.
 - History only where it is load-bearing for how you build now.
