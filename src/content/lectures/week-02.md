@@ -13,6 +13,7 @@ tags:
   - filesystem
   - network
   - graphics
+slides: /decks/week-02/
 related:
   - sessions/02-what-does-it-need
   - lectures/week-12

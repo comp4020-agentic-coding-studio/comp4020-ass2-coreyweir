@@ -1,0 +1,189 @@
+---
+title: Characterising a target
+description:
+  Week 2 — what a program actually requires, and how each answer reduces the
+  set of approaches worth attempting
+---
+
+{/* _class: impact */}
+
+# Characterising a target
+
+Week 2
+
+---
+
+{/* _id: possible */}
+
+## Nothing in this course is impossible
+
+That is not encouragement. It is the reason the course exists.
+
+If every option is technically available — and after last week you know they
+are — then "can it be done" is a question with a known answer, and spending a
+fortnight on it is the most expensive mistake available to you.
+
+---
+
+{/* _class: impact */}
+
+# Possible is not the interesting property. Justifiable is.
+
+---
+
+## What reduces the set
+
+Not your cleverness, and not the state of the tooling. **The target.**
+
+A program that is pure computation compiles and runs almost anywhere, and
+always did.
+
+A program that expects processes, a filesystem it shares with something else, a
+socket it can listen on, or a surface to draw on is asking for things the web
+either does not have or provides in a shape that will not fit.
+
+---
+
+{/* _id: axes */}
+
+## The axes
+
+| Ask                            | Because a yes means                            |
+| ------------------------------ | ---------------------------------------------- |
+| what language and runtime?     | whether a compiler exists at all                |
+| does it block?                 | the main thread cannot, so something must unwind |
+| does it spawn?                 | you need processes, and there are none          |
+| what does it open?             | a filesystem, and whether anyone else reads it  |
+| what does it talk to?          | the other end has to consent                    |
+| does it draw?                  | the rendering path is decided before you start  |
+
+Each answer removes options. More usefully, each tells you what evidence you
+would need to remove more.
+
+---
+
+## Blocking is first for a reason
+
+It looks like the smallest of the six. It is the one that reaches furthest
+down.
+
+A program that waits — for input, for a lock, for a reply — is not asking for a
+feature. It is asking for a **control-flow shape** the page does not have, and
+the fix is not a shim over a call. It is a transformation of the compiled
+program.
+
+You will meet this properly in week 6. Cost it now.
+
+---
+
+{/* _id: ordering */}
+
+## Things break in an order
+
+1. blocking and re-entrant control flow
+2. threads
+3. processes
+4. network
+5. filesystem
+6. graphics
+7. dynamic linking
+
+Weeks 5 to 11 follow that list, because that is the order a real port
+encounters them — not the order of difficulty, the order of arrival.
+
+Where your target stops is where your semester gets interesting.
+
+---
+
+{/* _id: targets */}
+
+## Target A
+
+An agentic coding tool. JavaScript on a large runtime, a terminal interface, a
+filesystem it shares with the user's editor, subprocesses for everything it
+does not do itself, and HTTPS to one vendor.
+
+Run the axes over it and **nothing is eliminated**. Compile it, shim it, give
+it a kernel surface, translate its binary, boot an OS under it — all six remain
+arguable.
+
+That is the hard case. The decision will have to be comparative, and
+comparative means measured.
+
+---
+
+## Target B
+
+A web browser. C++, multi-process by design, its own sandbox, its own
+scheduler, a GPU process, and a rendering surface that is the entire point of
+the program.
+
+Run the same axes and most of the space is gone before you have written
+anything.
+
+---
+
+## Which of those is the good target?
+
+Both, and for opposite reasons.
+
+- The one where nothing is eliminated makes you do the comparison properly,
+  because nothing else will settle it.
+- The one where a single requirement collapses the space makes you defend a
+  reduction you can state in one sentence.
+
+The bad target is the one where you cannot tell which you have.
+
+---
+
+{/* _id: unknown */}
+
+## The axis you cannot answer yet
+
+You will have at least one. The honest move is to write it down as a question
+with a **price**: what would it cost to find out, and what does the answer
+change?
+
+"I do not know whether it spawns" is a gap.
+
+"I do not know whether it spawns; an afternoon with `strace` settles it; if it
+does, two approaches leave the set" is a plan.
+
+---
+
+{/* _id: assignment */}
+
+## What the first assignment asks
+
+Characterise one target, then reduce the set of approaches to the ones you can
+justify.
+
+Not the set that would work — for any target that is all of them. The set you
+can **defend**, with a stated cost for each and a stated reason for every
+exclusion.
+
+Breadth is not marked. Accuracy is.
+
+---
+
+## And it binds you
+
+You keep this target for the rest of the semester, including the final
+assignment, where you give yourself a new requirement and find out what your
+commitment cost.
+
+So choose a target whose outer edges you can imagine. A program with nowhere
+left to go makes the last assignment impossible, and a program you cannot
+characterise at all makes the first one guesswork.
+
+You are choosing a semester, not an exercise.
+
+---
+
+## Before the session
+
+Bring a candidate and the six answers, even where the answer is "I do not
+know".
+
+The session's job is to find the axis you answered too quickly — and in this
+room it is usually the second one.
