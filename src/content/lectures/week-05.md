@@ -13,6 +13,7 @@ tags:
   - network
   - pipes
   - interfaces
+slides: /decks/week-05/
 related:
   - sessions/05-what-does-it-ask-the-kernel
   - lectures/week-06

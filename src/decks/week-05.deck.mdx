@@ -1,0 +1,207 @@
+---
+title: The web is not POSIX-compatible (i)
+description:
+  Week 5 — a kernel-shaped surface, the forty-six calls that make up the
+  standard one, and what it means for a call to be present and wrong
+---
+
+{/* _class: impact */}
+
+# The web is not POSIX-compatible (i)
+
+Week 5
+
+---
+
+{/* _id: why */}
+
+## Stop shimming one interface at a time
+
+Week 3 ended at a wall. Week 4 ended at an interface.
+
+The general answer to both is to stop answering calls individually and give
+the program a **kernel-shaped surface** to compile against — one target, one
+ABI, and the host implements it once for every guest.
+
+This is the best-value option in the course. It is also the one with the
+subtlest failures, which is why it gets two weeks.
+
+---
+
+{/* _id: owes */}
+
+## What a kernel-shaped surface owes a guest
+
+Descriptors, and operations on them. A directory tree. Time. Randomness.
+Arguments and environment. A way to exit.
+
+That list is small enough to be honest about, and it is deliberately smaller
+than POSIX. The question is not whether it matches. It is **where it stops
+matching, and whether your program notices**.
+
+---
+
+{/* _id: fortysix */}
+
+## The standard surface: forty-six calls
+
+Four of them are sockets: accept, receive, send, shut down.
+
+Read that list again. You can use a socket somebody handed you. You cannot
+**open** one.
+
+That is not an oversight, it is the capability model: a program gets what the
+host granted it at startup, and nothing it can name itself.
+
+---
+
+## There is no working directory
+
+No `chdir`. No `getcwd`.
+
+A program that believes it has a current directory is talking to its own C
+library, which is keeping a string on its behalf and resolving against it.
+
+Files are opened **relative to a directory handle** granted at startup. A
+program can only reach what the host decided to hand it, and an absolute path
+is not a thing the interface accepts.
+
+---
+
+## What else is simply absent
+
+| Missing        | Consequence                                   |
+| -------------- | --------------------------------------------- |
+| `fork`/`exec`/`wait` | no processes, so no shell                |
+| pipes          | nothing to connect two programs with          |
+| threads        | one of everything                             |
+| `dup2`         | you cannot rewire a descriptor                |
+| mode bits      | nothing is executable, because nothing executes |
+
+A surprising amount of software survives all of that. Everything that composes
+programs does not.
+
+---
+
+{/* _id: extended */}
+
+## The extended surface
+
+Roughly ninety-five more calls, as a **strict superset**: processes, threads,
+futexes, sockets you can open, a working directory, pipes, `dup2`, `epoll`, a
+terminal, dynamic loading.
+
+Somewhere in that list a shell becomes possible, and once a shell is possible
+the entire Unix toolbox arrives at once.
+
+That is the buy. Now the cost.
+
+---
+
+## What it costs to have your own kernel ABI
+
+You are no longer a consumer of a standard. You are a **maintainer of an
+interface**, with guests compiled against it, and every gap you fill is a gap
+you fill forever.
+
+There is no conformance suite waiting for you. There is no second
+implementation to disagree with you.
+
+Which brings us to the thing this week exists for.
+
+---
+
+{/* _class: impact */}
+
+# A call can be present, and still be wrong.
+
+---
+
+{/* _id: execve */}
+
+## What that looks like in practice
+
+In one sysroot, the function that replaces a running program with a different
+one compiles to two instructions: a call to the host, then `unreachable`.
+
+The import was declared as **returning nothing**. So the host's "this failed,
+here is the error" was turned into "the process is exiting, with that number".
+
+A failed exec cannot report failure. It can only succeed, or end the program.
+
+---
+
+## Why that destroys a shell specifically
+
+Looking up a command by name is a **loop** in userspace. The C library tries
+each directory on the search path in turn until one works.
+
+With a call that cannot fail, the first miss ends the process. The loop never
+reaches its second candidate.
+
+---
+
+## Three measurements, and the shape falls out
+
+| Invocation          | Result                                          |
+| ------------------- | ----------------------------------------------- |
+| `env /bin/printenv` | rc 0 — absolute path, one attempt, works        |
+| `env printenv`      | no output, rc 126 — the search died on the first miss |
+| `./script.sh`       | rc **45** — an `errno` value leaking as an exit code |
+
+That third row is the one that gives the game away. Forty-five is not an exit
+status anyone chose. It is `Noexec`, wearing a costume.
+
+---
+
+## And one program that was immune
+
+A shell that resolves the search path **itself** and then issues exactly one
+absolute exec never sees the bug.
+
+So on a system where the shell works fine, every program that calls `execvp`
+is quietly broken, and the thing most likely to be in your smoke test is the
+thing least able to detect it.
+
+---
+
+{/* _id: probe */}
+
+## How you would actually find it
+
+Not by reading the ABI. By writing probes whose **failure is
+discriminating**.
+
+A script starting `#!/bin/sh` tells you almost nothing: a shell falling back
+after `ENOEXEC` looks identical to real interpreter dispatch.
+
+A script starting `#!/bin/echo shebang-dispatched` can only produce output one
+way.
+
+Design probes that distinguish between the explanations, not probes that
+succeed.
+
+---
+
+{/* _id: packaging */}
+
+## Delivery, briefly
+
+A container format with a magic number and a CBOR index, whose contents are
+content-addressed blobs shared between packages.
+
+And **multicall binaries** — one executable that inspects `argv[0]` and
+becomes whichever tool it was invoked as. The Unix answer to "sixty programs,
+one download", forty years old and newly relevant when the download is the
+expensive part.
+
+---
+
+## Before the session
+
+Take your target and enumerate what it asks the kernel for. `strace` it, or
+read its syscall table, and sort the answers into: present, absent, and
+**present but unverified**.
+
+That third column is the week's homework. For each entry in it, write the
+probe that would tell you which it really is.
