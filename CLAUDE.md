@@ -119,6 +119,9 @@ A3 adjustment, and calibration of the A1 audit.
   slide go in the body as markdown, using `{/* _id: name */}` and `#/name`.
 - `tags` on content nodes is unbounded; the 1–3 limit applies only to the course
   record.
+- A markdown table with an empty leading header cell — the `| | A | B |` habit
+  for a row-label column — fails the build's `empty-table-header` check. Name
+  every column.
 
 ## Working rules
 

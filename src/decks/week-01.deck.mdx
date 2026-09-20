@@ -1,48 +1,329 @@
 ---
-title: Opening lecture
-description: The placeholder deck — replace it with a real deck for your course
+title: Running code in the browser
+description:
+  Week 1 — thirty years of running foreign code in a web page, and the option
+  space that replaced it
 ---
 
-# Opening lecture
+{/* _class: impact */}
 
-{/* STARTER_CONTENT: replace this deck, then remove this comment. */}
+# Running code in the browser
 
-Replace this deck. It is here to show that slides are part of the site, built
-from the same markdown as everything else.
+Week 1
 
 ---
 
-## Slides are markdown
+{/* _id: problem */}
 
-A `---` starts a new slide. Everything else is ordinary markdown: headings,
-lists, links, tables, images, fenced code.
+## The problem has not changed since 1995
 
-- one idea per slide
-- the fewest words that carry it
-- the deck is a performance artefact, so it can say things a page wouldn't
+You have a program. It was not written for the web, it does not speak
+JavaScript, and you want it in a tab.
+
+Every answer anyone has shipped is one of two shapes:
+
+- **ship a second engine**, and give it a rectangle
+- **make the engine already there** run the program
+
+Thirty years of the first. Then one attempt that looks like the first and
+argues like the second.
+
+---
+
+## "Plugin" names two different things
+
+**The runtime** — what your code actually ran on. Its own VM, its own JIT, its
+own renderer, its own security model, from its own vendor on its own release
+schedule.
+
+**The ABI** — how that runtime was let into the page. NPAPI, ActiveX, PPAPI.
+
+Flash shipped through all three. Keeping them apart is the difference between
+"Flash died" and "the way Flash arrived died", which are not the same event and
+did not have the same cause.
+
+---
+
+{/* _id: runtimes */}
+
+## The runtimes
+
+| Runtime          | What it actually was                              | Gone                     |
+| ---------------- | ------------------------------------------------- | ------------------------ |
+| **Java applets** | a JVM, with its own verifier and security manager | removed in JDK 11, 2018  |
+| **Flash**        | AVM2 — its own VM, JIT and renderer               | blocked 12 January 2021  |
+| **Silverlight**  | CoreCLR plus XAML, in a plugin                    | end of support, Oct 2021 |
+
+Three independent implementations of "run untrusted code safely", none of them
+the browser's, all of them patched on a schedule you did not control.
+
+---
+
+{/* _id: abis */}
+
+## The ABIs
+
+| ABI          | What it actually was                                | Gone                       |
+| ------------ | --------------------------------------------------- | -------------------------- |
+| **NPAPI**    | C ABI; the plugin runs **in the browser's process**  | Chrome 45, September 2015  |
+| **ActiveX**  | COM, in-process; a signature and a dialog box        | with IE11, June 2022       |
+| **PPAPI**    | a sandboxed process, behind a Google-only ABI        | June 2022                  |
+
+ActiveX's model is worth stating precisely, because the industry still ships it:
+a prompt is not a security boundary. It is a transfer of liability to the user.
+
+---
+
+## The framing everyone uses is wrong
+
+"Plugins ran outside the browser" is rhetorically satisfying and literally
+false. An NPAPI plugin and an ActiveX control ran **in the browser's own
+process, with the browser's own memory**.
+
+The axis that survives contact with the record is not inside or outside. It is:
+
+**who validates the code, and does it share the web's execution context?**
+
+Keep that one. It is still the axis in week 9, when the code is an ELF binary.
+
+---
+
+## What actually killed each one
+
+- **Java applets** — a run of sandbox-escape zero-days across 2012–13. The
+  bytecode verifier was not the weak part; everything built around it was.
+- **ActiveX** — drive-by installs. The dialog box worked exactly as designed.
+- **NPAPI** — an ABI that could not be fixed without breaking every plugin, so
+  Chrome removed the ABI.
+- **Flash** — a decade of remote code execution, then mobile, which never had
+  it and did not miss it.
+- **Silverlight** — nothing. It was sound and nobody shipped it.
+
+Four died of a second security model maintained by a second vendor. Silverlight
+died of distribution, which is the other way to lose, and the one engineers
+forget to price.
+
+---
+
+{/* _id: nacl */}
+
+## Native Client
+
+Real x86 instructions, on the actual CPU. No interpreter. No second language to
+JIT.
+
+Safe because a **static validator** proved it safe before it ran: instructions
+packed into 32-byte bundles, no instruction straddling a bundle boundary, every
+indirect jump masked so it can only land on a bundle start. Code that does not
+validate does not load.
+
+Architecturally, a plugin. Philosophically, WebAssembly — in 2009.
+
+---
+
+## The sentence that gives it away
+
+NaCl accepted untrusted code because a validator had proved it conformed. Not
+because a vendor vouched for it, and not because you clicked yes. In the 2009
+paper's own words: **"no pop-up window asks for permission"**.
+
+Set that beside ActiveX, seven years earlier: a signature, and a dialog.
+
+That is the web's security model, arriving five years before WebAssembly
+existed, inside the last great plugin.
+
+---
+
+## PNaCl removed the last technical objection
+
+LLVM bitcode. A `.pexe` the browser translates into a `.nexe` for whatever CPU
+is actually there. Shipped in Chrome 31, November 2013.
+
+Portable. Architecture-independent. Chrome announced its removal in **May
+2017**, in favour of WebAssembly.
+
+If the objection had been technical, PNaCl had already answered it.
+
+---
+
+{/* _class: quote */}
+{/* _id: pepper */}
+
+> Pepper is the blocker for any cross-browser adoption in reality.
+
+Brendan Eich, 9 October 2012, arguing that both NaCl and PNaCl are "tied to
+Pepper, a gargantuan API specified nowhere and implemented only in chromium.org
+code". In the same thread: "Microsoft and Apple will never adopt NaCl/Pepper."
+
+Apple's Maciej Stachowiak had already nicknamed it **ActiveG**.
+
+---
+
+## And the man saying no described what would replace it
+
+Five days later, in the same argument:
+
+> Indeed my plan is for JS to evolve and mutate to be that portable object
+> format for native code to compile to. Emscripten is a promising sign along
+> this path.
+
+That is asm.js and WebAssembly, named in 2012, as the reason not to adopt the
+alternative. The validator-shaped plugin was displaced by a validator-shaped
+non-plugin.
+
+It died of governance and API surface. Not of security.
+
+---
+
+{/* _id: bernhardt */}
+
+## The talk you will be sent
+
+Gary Bernhardt, _The Birth & Death of JavaScript_, 2014 — delivered deadpan as
+a history lecture given in 2035, which is the only reason anyone remembers the
+argument inside it.
+
+It is the most-cited thing in this field, and its thesis is three words. We
+come back to it, but not yet: the history it is joking about has two dates
+wrong in the version you have heard.
+
+---
+
+{/* _id: asmjs */}
+
+## asm.js was not first
+
+- **Emscripten emitted plain JavaScript in 2010.** No annotations, no special
+  mode, no engine support. It worked.
+- **Bellard booted Linux in a JS engine in 2011**, hand-written, in a browser,
+  before any of this had a name.
+
+asm.js landed in March 2013 — three years after the first, two after the
+second. Nothing arrived. Something became predictable.
+
+---
+
+## What asm.js actually added
+
+```js
+function add(x, y) {
+  x = x | 0;
+  y = y | 0;
+  return (x + y) | 0;
+}
+```
+
+Three annotations — `x|0` for int32, `+x` for double, `Math.fround(x)` for
+float32 — and an engine can compile that body to a single integer add
+ahead of time instead of profiling it and guessing.
+
+A typed subset of a language with no types. The ability was already there; what
+was missing was a promise the compiler could rely on.
+
+---
+
+## WebAssembly
+
+- announced **17 June 2015**
+- MVP shipped in browsers **March 2017**
+- W3C Recommendation **5 December 2019**
+
+Chrome announced PNaCl's removal two months after the MVP shipped. The idea
+survived. The ABI did not.
+
+---
+
+{/* _id: escalation */}
+
+## Back to the talk
+
+His demo, in the order he builds it:
+
+GIMP, which wants Win32 → **Wine**, which wants X → an **X shim** → all of it
+compiled from C to asm.js → running inside **Chrome** → which is also C, so
+also compiled to asm.js → but that is the Mac build, which wants Cocoa →
+**Cacao** → all of it running inside **Firefox**.
+
+Every arrow is a compiler you can already download.
 
 ---
 
 {/* _class: impact */}
 
-# A slide class
-
-`{/* _class: impact */}` fills the slide with the brand colour. `quote`,
-`banner` and `centered` are the others the theme styles.
+# It's just compilers.
 
 ---
 
-## What else is here
+## He is right, and he is careful about it
 
-```sh
-pnpm dev
-pnpm check
-```
+The Unreal Engine 3 port in that talk: a quarter of a million lines of
+arbitrary C — "there's surely pointer math going on in there somewhere" — at
+about half native speed, in 2013, ported in five days by Epic and Mozilla.
 
-The second command proves the deck compiles with the rest of the site. Use the
-first to inspect every slide at the desktop and phone marking viewports; slide
-fit and legibility are visual judgements.
+And immediately after the stack above:
 
-The [astromotion](https://github.com/ANUcybernetics/astromotion) README has the
-rest of the syntax: speaker notes, backgrounds, QR codes, fragments, and
-components hydrated per slide.
+> Now, we're not talking about something you would actually want to do. This is
+> several hundred megabytes of ASM code. It is not the fastest thing in the
+> world, but it does work, because it's just compilers.
+
+---
+
+{/* _id: yes-and-no */}
+
+## Yes, and no
+
+**Yes.** Twelve years on, the record keeps agreeing with him.
+
+**No.** The talk carries one number for what this costs: ~20% of VM overhead
+against ~20% saved by dropping hardware isolation, a 4% net win. Out here there
+is no one number.
+
+| Route to wasm                           | What it costs                              |
+| --------------------------------------- | ------------------------------------------ |
+| elfconv, AOT-translating an AArch64 ELF | 78–96% of wasm built from the same source  |
+| a CPU emulator doing that same job      | "10× or more", by elfconv's own measurement |
+| v86, JITting x86 at runtime             | caps out at a Pentium 4                    |
+
+Nearly free, an order of magnitude, or you do not get a 64-bit machine.
+
+---
+
+## The question the joke cannot answer
+
+"It's just compilers" answers _can it run_. That question is settled, and it
+was settled before most of you started programming.
+
+It says nothing about which of the several routes suits **this** program, what
+each costs in speed, size, build time and breakage, or what each leaves you
+able to do in six months when the requirement changes.
+
+You will have to choose between them before you have the evidence you would
+need to choose well. That is the whole course.
+
+---
+
+{/* _id: demos */}
+
+## Four things that already work
+
+- **v86** — a hand-written x86 interpreter that compiles hot guest pages into
+  wasm modules at runtime. Pentium 4 with full SSE3; no multicore, no 64-bit
+  extensions, no 64-bit kernels.
+- **JSLinux / TinyEMU** — Bellard went hand-written JS, then asm.js, then back
+  to C compiled by Emscripten, and it got _faster_. 64-bit x86; it will nest
+  QEMU inside itself.
+- **Unity WebGL** — IL2CPP turns C# into C++, Emscripten turns that into wasm.
+  The asm.js target was removed in 2020.1.
+
+---
+
+## Before the session
+
+Open all of them, and use them properly rather than for ten seconds.
+
+Come back with a **number or an observation**, not an impression: download
+size, time until it was usable, whether typing feels immediate, whether the fan
+spins up.
+
+Then we will find out whether they sit where you expected, because they are not
+ordered by how much is being emulated.
