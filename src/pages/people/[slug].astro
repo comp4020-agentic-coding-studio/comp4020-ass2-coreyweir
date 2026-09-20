@@ -12,9 +12,9 @@ export async function getStaticPaths() {
 const { person } = Astro.props;
 const { Content } = await render(person);
 
-// This repo's people schema takes `role` as a free string rather than the
-// package's enum, so render it as written instead of mapping it.
-const roleLabel = person.data.role;
+// `role` is deliberately not rendered here: every person's description opens
+// with it, so a Role row repeats the line directly above it. It is still the
+// source for the role shown beside a name in TeachingTeam.
 // Astro's generated type does not retain the image/alt refinement relationship,
 // so narrow the alt at the rendering boundary as well.
 const rawPhotoAlt = (person.data as { photoAlt?: unknown }).photoAlt;
@@ -31,13 +31,7 @@ const description = person.data.description;
   heroImageAlt={photoAlt}
   {...siteConfig}
 >
-  <dl>
-    {roleLabel && (
-      <>
-        <dt>Role</dt>
-        <dd>{roleLabel}</dd>
-      </>
-    )}
+  <dl class="person-details">
     {person.data.affiliation && (
       <>
         <dt>Affiliation</dt>
@@ -70,3 +64,34 @@ const description = person.data.description;
 
   <Content />
 </ContentLayout>
+
+<style>
+  /* A contact block, not prose: label and value on one line, so the eye can
+     skip the labels. Falls back to stacked pairs when the column is narrow. */
+  .person-details {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.35rem 1.5rem;
+    margin-block: 1.5rem 2rem;
+  }
+
+  .person-details dt {
+    color: var(--at-text-secondary);
+  }
+
+  .person-details dd {
+    margin: 0;
+  }
+
+  @media (width < 32rem) {
+    .person-details {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .person-details dt {
+      margin-block-start: 0.85rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
