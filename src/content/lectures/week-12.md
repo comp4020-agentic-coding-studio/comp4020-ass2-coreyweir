@@ -32,8 +32,9 @@ you built an execution environment tuned to one target. Change the target's
 requirements and you do not refactor. You throw the environment away and build
 a different one, and almost nothing transfers.
 
-So the scoping decisions you made in week 2 are the expensive ones, and the
-outer reaches of your requirements matter more than the likely ones. A
+So the scoping decisions you made when you chose your target are the expensive
+ones, and the outer reaches of your requirements matter more than the likely
+ones. A
 requirement for native applications, or for a desktop, does not extend your
 approach — it invalidates it.
 
