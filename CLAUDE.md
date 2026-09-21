@@ -91,6 +91,10 @@ A3 adjustment, and calibration of the A1 audit.
   fluent paragraph that would suit any course on this subject. If a paragraph
   survives a find-and-replace of the technology, it is not written yet.
 - Trade-offs, never feasibility. Reduce the justifiable set; do not "rule out".
+- **A student commits to nothing in a session.** Sessions are practice and the
+  target is optional in them, so the scope decisions a later week holds them to
+  were made in **Assignment 1**, not "in week 2". Anchor every such reference to
+  the assignment. This has been corrected four times.
 - `src/course-config.ts` and the content collections are the source for course
   facts. Do not restate a date, a weight or a code in prose where it can drift.
 - **Open every source before citing it.** A link label is a claim about what is
