@@ -130,13 +130,29 @@ not a small remaining task. It is the accelerated path.
 | emulated a machine  | a framebuffer                    | yes                |
 | ran a kernel        | mode-setting, 2D                 | yes                |
 
-The column that decides your semester is the third one.
+The column that decides your semester is the third one — and it is the one most
+easily misread.
+
+---
+
+## "Unmodified" is not "no bridging"
+
+An X client reaches its server over a Unix socket, and that does not stop being
+true because the server is now WebAssembly.
+
+Where the table says **yes**, something underneath is implementing that socket
+for you — whatever kernel-shaped thing you put there. Where it says **no**, you
+moved the client onto a different transport yourself, which is exactly why it
+had to be rebuilt.
+
+The bridging never disappears. It changes shape, and it changes owner. Those
+are the two things to compare.
 
 ---
 
 {/* _class: impact */}
 
-# You do not choose the rendering path in week 11. You chose it in Assignment 1.
+# You do not choose the rendering path when it is time to add graphics. It was decided when you chose how the program would run.
 
 ---
 
