@@ -197,11 +197,14 @@ expensive part.
 
 ---
 
-## Before the session
+## In the session
 
-Take your target and enumerate what it asks the kernel for. `strace` it, or
-read its syscall table, and sort the answers into: present, absent, and
-**present but unverified**.
+You trace a real program and sort what it asks the kernel for into **in
+preview1**, **in WASIX**, and **in neither** — then over the top of that, the
+column this week added: **present but unverified**.
 
-That third column is the week's homework. For each entry in it, write the
-probe that would tell you which it really is.
+For each entry in that last one, write the probe that would settle it.
+
+Then the question that carries the hour: which call would you most like to
+delete from the program's requirements, and what would losing it cost the
+program?

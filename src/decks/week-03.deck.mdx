@@ -149,12 +149,13 @@ reimplementation by its second caller.
 
 ---
 
-## Before the session
+## In the session
 
-Take something small your target depends on and shim it — far enough that the
-program gets further than it did, and no further.
+You run a real program against a browser-side shim and get it further than it
+got — far enough to see the boundary, and no further. Borrow something if your
+own target is native; this hour needs a JavaScript runtime.
 
-Then find the first call that the shim answers **plausibly but wrongly**.
+Then you find the first call the shim answers **plausibly but wrongly**.
 
 Not the one that throws. The one that returns something. That distance — from
-"it throws" to "it lies" — is the thing this week is about.
+"it throws" to "it lies" — is the hour.

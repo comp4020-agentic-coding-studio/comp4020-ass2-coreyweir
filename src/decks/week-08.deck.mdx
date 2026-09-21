@@ -232,10 +232,13 @@ Knowing which of your boundaries is load-bearing is the whole skill.
 
 ---
 
-## Before the session
+## In the session
 
-Find out what your target talks to, and for each endpoint answer one question:
-**would a cross-origin `fetch` from a page be allowed to read the reply?**
+You inventory what your target talks to — every host, every port, every
+protocol — and then, for the HTTP endpoints, you stop reasoning and issue the
+request from a page.
 
-Then check, rather than reasoning about it. The answer is a response header,
-and it is either there or it is not.
+The answer is a response header. It is there or it is not.
+
+For everything below HTTP the question is not whether it works, but who
+operates the relay and what it costs them to keep operating it.
