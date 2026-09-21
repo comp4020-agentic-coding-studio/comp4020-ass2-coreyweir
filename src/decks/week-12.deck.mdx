@@ -121,15 +121,19 @@ approach. It invalidates it.
 
 {/* _id: aot */}
 
-## One that arrived late
+## One that arrives late
 
-Week 9's translator: 165,264 hot blocks traced, a cold start brought from
-fifteen minutes to eighteen seconds. Real work, correctly done, and a result
-worth having.
+Take week 9's ahead-of-time route. You trace a real workload, translate every
+block it executed, and the cold start comes down by the order of magnitude the
+technique promises. Correct work, honestly measured.
 
-It was defeated by one property of the target — that the guest compiles its own
-code at runtime — and that property was **visible in week 2**, in a single
-sentence about the runtime that nobody put a price on.
+Then the target reaches the part of itself that writes code at runtime — an
+embedded scripting engine, a regular-expression JIT, anything with a compiler
+inside it. There is nothing to translate ahead of time, because the code has
+not been written yet.
+
+That property was in your characterisation the whole time, as one line about
+what the target is made of that nobody put a price on.
 
 ---
 
