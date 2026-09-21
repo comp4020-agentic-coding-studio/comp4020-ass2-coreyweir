@@ -44,14 +44,17 @@ The rewrite is the port. Not a step in it.
 
 ## But the scope is wider than it first looks
 
-You are not limited to compiling the *application*.
+Ordinarily the toolchain absorbs the rewrite for you. Emscripten implements SDL
+against a canvas and a WebGL context, so a program that already draws through
+SDL keeps its drawing code.
 
-Somebody has compiled an entire **X server** to WebAssembly.
+But the unit does not have to be the application. It is possible to compile an
+entire **X server** to WebAssembly — and the one that exists is an SDL-backed
+X server, so it arrives down the same road.
 
-So "port the app" and "port the thing the app talks to" are both on the table,
-and the second one ports every client at once — which is a completely
-different cost curve, and the kind of move that only becomes visible when you
-stop treating the application as the unit.
+"Port the app" and "port the thing the app talks to" are both on the table, and
+the second ports every client at once. That only becomes visible when you stop
+treating the application as the unit.
 
 ---
 
