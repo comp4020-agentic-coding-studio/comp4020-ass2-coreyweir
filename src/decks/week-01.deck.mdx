@@ -248,12 +248,17 @@ survived. The ABI did not.
 
 His demo, in the order he builds it:
 
-GIMP, which wants Win32 → **Wine**, which wants X → an **X shim** → all of it
-compiled from C to asm.js → running inside **Chrome** → which is also C, so
-also compiled to asm.js → but that is the Mac build, which wants Cocoa →
-**Cacao** → all of it running inside **Firefox**.
+| What wants something it has not got | What he hands it          |
+| ----------------------------------- | ------------------------- |
+| GIMP wants Win32                    | **Wine**                  |
+| Wine wants X                        | an **X shim**             |
+| all of that is C                    | **Emscripten**, to asm.js |
+| the host is Chrome for Mac, which wants Cocoa | **Cacao**       |
 
-Every arrow is a compiler you can already download.
+And then all of that runs inside Firefox.
+
+Nothing in the right-hand column was written for this. It is all off the
+shelf — except Cacao, which does not exist. The open-source Cocoa is GNUstep.
 
 ---
 
