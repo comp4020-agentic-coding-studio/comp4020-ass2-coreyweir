@@ -66,8 +66,9 @@ variant's **index**.
 Fifty-six variants. Add one in the middle and every message after it decodes
 as something else — plausibly, silently, with no error.
 
-The wire format is an ordered list, and ordered lists in source code do not
-look like wire formats.
+It is a wire protocol in an `enum`'s clothing, and no number is written down
+anywhere, so nothing at the edit site will tell you the rule: **append only,
+never insert, never reorder**.
 
 ---
 
