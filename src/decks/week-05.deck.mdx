@@ -78,8 +78,11 @@ is not a thing the interface accepts.
 | `dup2`         | you cannot rewire a descriptor                |
 | mode bits      | nothing is executable, because nothing executes |
 
-A surprising amount of software survives all of that. Everything that composes
-programs does not.
+Every row is the same loss restated: the program cannot start another execution
+context, or wire itself to one. Code that does its own work never notices. Code
+whose *design* is that arrangement — a shell, a build system, a test runner,
+anything that fans work out and collects it back — does not lose a feature
+here. It loses its architecture.
 
 ---
 
