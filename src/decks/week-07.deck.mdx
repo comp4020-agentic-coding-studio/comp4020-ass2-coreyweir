@@ -78,14 +78,21 @@ enumerate them is not exotic — it is what a recursive delete **is**.
 
 ## Where it left off
 
-A cookie is supposed to be an opaque token naming a *place in the directory*.
+Step 3 needs a bookmark, and `fd_readdir` takes one: a **cookie**, described by
+the interface as "the location within the directory to start reading". The
+runtime invents these values and returns one with every entry, as that entry's
+`d_next`. Hand the last one back and reading resumes after it.
 
-One runtime rebuilt the listing from scratch on every call and treated the
-cookie as a **positional index** into the new list.
+The program never interprets the value. Only the runtime that issued it knows
+what it denotes — which is the whole point, because it is free to denote
+something stable.
 
-Delete an entry and everything after it shifts up by one. The next call resumes
-one slot past where it should, and the entry that moved into that slot is never
-returned. Not skipped with an error. Never mentioned.
+One runtime re-listed the directory from scratch on every call and read the
+cookie as an **index into the new listing**: entry *n*, counted from the top.
+
+Delete an entry and everything after it moves up one. The next call resumes one
+past where it should, and whatever slid into the gap is never returned. Not
+skipped with an error. Never mentioned.
 
 ---
 
