@@ -302,6 +302,23 @@ Nearly free, an order of magnitude, or you do not get a 64-bit machine.
 
 ---
 
+{/* _id: not-compilers */}
+
+## And not all of them are compilers
+
+An emulator never compiles your program. It reads the instructions one at a
+time, forever. v86 does compile, but at runtime, from guest pages it has not
+seen before — which is the thing a compiler exists to avoid.
+
+The two hardest items in his own demo are not compilers either. Wine is a
+reimplementation of Win32, in development since 1993. The X shim is a
+reimplementation of a windowing system.
+
+Compiling the language is the finished part. Giving the compiled program
+somewhere to make its calls is the rest of this course.
+
+---
+
 ## The question the joke cannot answer
 
 "It's just compilers" answers _can it run_. That question is settled, and it
