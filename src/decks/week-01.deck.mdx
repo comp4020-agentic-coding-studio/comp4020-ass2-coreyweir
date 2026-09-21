@@ -248,12 +248,12 @@ survived. The ABI did not.
 
 His demo, in the order he builds it:
 
-| What wants something it has not got | What he hands it          |
-| ----------------------------------- | ------------------------- |
-| GIMP wants Win32                    | **Wine**                  |
-| Wine wants X                        | an **X shim**             |
-| all of that is C                    | **Emscripten**, to asm.js |
-| the host is Chrome for Mac, which wants Cocoa | **Cacao**       |
+| What is missing           | What stands in for it       |
+| ------------------------- | --------------------------- |
+| Win32, for GIMP           | **Wine**                    |
+| X, for Wine               | an **X shim**               |
+| a machine that runs C     | **Emscripten**, C to asm.js |
+| Cocoa, for Chrome for Mac | **Cacao**                   |
 
 And then all of that runs inside Firefox.
 
