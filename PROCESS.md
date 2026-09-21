@@ -1,53 +1,23 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-Written by you, for a reader: how you got from the brief to the harness and
-agentic workflow behind this submission. Markers read this file and follow its
-citations; they don't trawl the repo for evidence you didn't point at.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+I built the course page materials for *SLOP8815: How to Run Anything in the Browser*, a final year masters subject on the discipline of making software run in places it was never meant to. The course covers a range of techniques: from reimplementation, polyfills and shimming for JS programs; through compilation to webassembly and the WASI standard or its more POSIX-compatible standard WASIX; via ELF translation and static recompilation; to running kernels directly inside the browser and running entire virtual machines in WASM. It takes inspiration from Gary Bernhardt's PyCon 2014 talk [The Birth and Death of Javascript](https://www.destroyallsoftware.com/talks/the-birth-and-death-of-javascript), but asks the question: even if it is absurd, should the discipline not be taken seriously?
 
 ## How I got here
 
-The account of the process: how the work actually went, and how you knew the
-result was right. Tell it in whatever order makes it clear. A weekly prototype
-needs a paragraph or two; an assignment needs more.
+I think the key part of this work was at the start: I gave Opus three different options I was thinking about.
+- Should you be a software engineer?
+- All about Jev and classification models
+- How to Run Anything in ther Browser
+Going back and forth, we were quickly able to decide on the third option, leaving the big question: how do we turn this into a course?
+I pointed Opus to some of my local work on running Claude Code inside the browser, and after its subagents ran, it came up with an initial
+course outline. I gave it some corrections and pointed it towards some other relevant material, and it came up with a couple of options.
 
-Cite the record as you go, as links whose text is the commit hash or range and
-whose target is this repo's commit or compare URL, so a reader clicks straight
-to the evidence:
+It was at this point that Claude started trying to jump to locking in the outline, deciding the sessions and assessment format, etc.
+I deliberately slowed it down, and spent time working through the content with a simple view: lock in the content, the options that don't
+suit the course will fall out, and we'll be able to lock in the structure through elimination. I think spending the time upfront to figure out what the course was actually going to be and what form it would take—and I spent 4.5 hours doing so—really made the 'implementation phase' (or prose phrase) so much simpler. Once we'd locked the course design in, the harness was updated to reflect this in [`50975f1`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-coreyweir/commit/50975f1cd0fbd71b68d2ca25233a30e006b94972).
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+Once the course design was locked in and some spec tests written, we locked in the teaching staff and their bios—a perfect vehicle to set the tone the course would be delivered in. Then, I had Claude spawn research subagents—some doing web searches, some looking at examples I had locally—to get a deeper understanding of the course content. The view was that this would ground the lecture overviews and sessions, and would be useful for writing decks later. As much as only one deck was required, my stretch goal was to write decks for every lecture, so—seeing as I had the credits—we prioritised doing sufficiently deep research to enable this, and to ensure the lecture overviews and sessions were well grounded. Once the lectures and sessions were done, I spent time reading through all of them and examining them for issues and inconsistencies, and particularly common mistakes that needed to be corrected broadly—e.g. much of the course implied students would have locked in their target program by week 2, but that was not strictly required. Through [`65538e7...6aa3c81`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-coreyweir/compare/65538e7d55f375d0e60be0f4ce4b16ab5e230dfd...6aa3c810947609ab1c78875adb7de6d242bdee18) all of the lecture overviews and sessions landed to my satisfaction. Spending the time to do this manually, and including the teaching staff in this evaluation was really beneficial—e.g. Nadia was said to be overseeing the sessions but wasn't in the teaching staff for them all.
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the point better than a sentence does.
-Commit the file to this repo and link it with a **relative** path, which is what
-makes it render on GitHub: `![alt text](docs/before.png)`. Images don't count
-towards the word count and don't replace the citation.
-
-## Before you ship
-
-`pnpm check:evidence` verifies that this comment is gone, that your citations
-resolve to real commits, that a crit week's reflection entry is in
-`reflections/`, and that your `CLAUDE.md` is there. It checks that your account
-is traceable, not that it is good: that is the marker's call.
-
-Images aren't checked: unlike a citation whose SHA doesn't resolve, a broken
-image is visible the moment this file is rendered on GitHub.
+Once I was happy with all of the lecture overviews, I asked Opus to move onto the decks. It identified that while week 1 was the most required, week 7 was also full of technical content and week 12 closed the course out, and suggested doing those three. After week 1 and week 7, I noted that Opus was progressing quite well and I had the credits to spare, so I instructed it to go ahead and write decks for all 12 weeks. I also instructed it to use agent-browser to review the rendering when it was done, and to also consider the formatting on the people page when it did so. I suggested considering the formatting, clarity and correctness during the review. The initial decks all landed in [`6aa3c81...ffa3ee3`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-coreyweir/compare/6aa3c810947609ab1c78875adb7de6d242bdee18...ffa3ee3f15b2268cde03be6367a15d36d323d060). In the next session, I went through all 12 decks, finding inconsistencies with the rest of the course and other errors/oddities, and prompting Opus on how I wanted them resolved. Eventually, this was completed to my satisfaction. These changes landed in [`ffa3ee3...d54c403`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-coreyweir/compare/ffa3ee3f15b2268cde03be6367a15d36d323d060...d54c403908f01987ad5da833acfd327f0f16da11).
