@@ -48,8 +48,15 @@ Synchronous access handles — the ones that make OPFS usable as a real
 filesystem at all — are **dedicated-worker only**, and take an **exclusive
 lock** on the file by default.
 
-So the moment you want the main thread to see a file the guest is holding, the
-API has already answered you. Not slowly. Not at all.
+Both halves say the same thing about who may participate. The main thread
+cannot open one, because the method is not exposed to it. And while the worker
+holds one, no second access handle and no writable stream can be opened on that
+file from anywhere until it closes: `NoModificationAllowedError`.
+
+So OPFS does not give you one filesystem that two runtimes share. It gives you
+**one holder**, and everybody else asking the holder. There is a
+`readwrite-unsafe` mode that lifts the lock, and the name is the specification
+being honest about what you get back.
 
 ---
 
