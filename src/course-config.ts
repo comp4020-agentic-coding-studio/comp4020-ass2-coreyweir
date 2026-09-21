@@ -51,7 +51,7 @@ export const courseMeta = slopCourseMetaSchema.parse({
   description:
     "Everything can be made to run in a browser; the question is what it " +
     "costs. Twelve weeks comparing shims, compilation, POSIX surfaces, " +
-    "binary translation and whole kernels against a target you choose in " +
-    "week two and carry to the end.",
+    "binary translation and whole kernels against a target you choose " +
+    "before Assignment 1 and carry to the end.",
   tags: ["WebAssembly", "browser runtimes", "emulation"],
 }) satisfies CourseMetaInput;
